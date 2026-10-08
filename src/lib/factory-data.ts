@@ -14,6 +14,12 @@ export type Machine = {
   telemetry: MachineTelemetry;
 };
 
+/**
+ * Baseline telemetry for the FactoryGuard 10-machine fleet.
+ *
+ * This is intentionally kept separate from the simulation engine.
+ * The simulation layer will evolve machine state later.
+ */
 const telemetryByMachine: Record<string, MachineTelemetry> = {
   "CNC-01": {
     temperature: 67,
@@ -96,6 +102,12 @@ const telemetryByMachine: Record<string, MachineTelemetry> = {
   },
 };
 
+/**
+ * Static identity/configuration for the factory fleet.
+ *
+ * Runtime machine state should eventually come from the
+ * simulation engine rather than being stored here.
+ */
 const machineMetadata: Omit<Machine, "status" | "telemetry">[] = [
   {
     id: "CNC-01",
@@ -156,7 +168,7 @@ const machineMetadata: Omit<Machine, "status" | "telemetry">[] = [
   {
     id: "CNC-08",
     name: "CNC-08",
-    model: "Haas VF-3",
+    model: "Haas UMC-500",
     line: "Production Line C",
     location: "Bay C2",
   },
@@ -164,7 +176,7 @@ const machineMetadata: Omit<Machine, "status" | "telemetry">[] = [
   {
     id: "CNC-09",
     name: "CNC-09",
-    model: "Mazak QT-250",
+    model: "Okuma MB-5000",
     line: "Production Line C",
     location: "Bay C3",
   },
@@ -172,12 +184,18 @@ const machineMetadata: Omit<Machine, "status" | "telemetry">[] = [
   {
     id: "CNC-10",
     name: "CNC-10",
-    model: "Okuma MB-5000",
-    line: "Production Line C",
-    location: "Bay C4",
+    model: "Mazak HCN",
+    line: "Production Line D",
+    location: "Bay D1",
   },
 ];
 
+/**
+ * Returns the current baseline fleet snapshot.
+ *
+ * Until the simulation engine is introduced, this function derives
+ * machine status directly from the machine telemetry.
+ */
 export function getFactoryMachines(): Machine[] {
   return machineMetadata.map((machine) => {
     const telemetry = telemetryByMachine[machine.id];
