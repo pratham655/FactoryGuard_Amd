@@ -9,13 +9,13 @@ describe("GET /api/factory/status", () => {
 
     const data = await response.json();
 
-    expect(data.summary.totalMachines).toBe(7);
-    expect(data.summary.normalMachines).toBe(5);
+    expect(data.summary.totalMachines).toBe(10);
+    expect(data.summary.normalMachines).toBe(8);
     expect(data.summary.warningMachines).toBe(1);
     expect(data.summary.criticalMachines).toBe(1);
     expect(data.summary.activeIncidents).toBe(2);
 
-    expect(data.machines).toHaveLength(7);
+    expect(data.machines).toHaveLength(10);
   });
 
   it("includes CNC-07 as a critical machine", async () => {

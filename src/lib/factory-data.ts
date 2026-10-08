@@ -70,6 +70,30 @@ const telemetryByMachine: Record<string, MachineTelemetry> = {
     motorCurrent: 17.8,
     errorCode: "E-204",
   },
+
+  "CNC-08": {
+    temperature: 76,
+    vibration: 4.2,
+    pressure: 4.0,
+    motorCurrent: 12.7,
+    errorCode: null,
+  },
+
+  "CNC-09": {
+    temperature: 71,
+    vibration: 2.6,
+    pressure: 4.3,
+    motorCurrent: 12.4,
+    errorCode: null,
+  },
+
+  "CNC-10": {
+    temperature: 74,
+    vibration: 3.4,
+    pressure: 4.1,
+    motorCurrent: 12.0,
+    errorCode: null,
+  },
 };
 
 const machineMetadata: Omit<Machine, "status" | "telemetry">[] = [
@@ -80,6 +104,7 @@ const machineMetadata: Omit<Machine, "status" | "telemetry">[] = [
     line: "Production Line A",
     location: "Bay A1",
   },
+
   {
     id: "CNC-02",
     name: "CNC-02",
@@ -87,6 +112,7 @@ const machineMetadata: Omit<Machine, "status" | "telemetry">[] = [
     line: "Production Line A",
     location: "Bay A2",
   },
+
   {
     id: "CNC-03",
     name: "CNC-03",
@@ -94,6 +120,7 @@ const machineMetadata: Omit<Machine, "status" | "telemetry">[] = [
     line: "Production Line A",
     location: "Bay A3",
   },
+
   {
     id: "CNC-04",
     name: "CNC-04",
@@ -101,6 +128,7 @@ const machineMetadata: Omit<Machine, "status" | "telemetry">[] = [
     line: "Production Line B",
     location: "Bay B1",
   },
+
   {
     id: "CNC-05",
     name: "CNC-05",
@@ -108,6 +136,7 @@ const machineMetadata: Omit<Machine, "status" | "telemetry">[] = [
     line: "Production Line B",
     location: "Bay B2",
   },
+
   {
     id: "CNC-06",
     name: "CNC-06",
@@ -115,12 +144,37 @@ const machineMetadata: Omit<Machine, "status" | "telemetry">[] = [
     line: "Production Line B",
     location: "Bay B3",
   },
+
   {
     id: "CNC-07",
     name: "CNC-07",
     model: "DMG MORI NHX",
     line: "Production Line C",
     location: "Bay C1",
+  },
+
+  {
+    id: "CNC-08",
+    name: "CNC-08",
+    model: "Haas VF-3",
+    line: "Production Line C",
+    location: "Bay C2",
+  },
+
+  {
+    id: "CNC-09",
+    name: "CNC-09",
+    model: "Mazak QT-250",
+    line: "Production Line C",
+    location: "Bay C3",
+  },
+
+  {
+    id: "CNC-10",
+    name: "CNC-10",
+    model: "Okuma MB-5000",
+    line: "Production Line C",
+    location: "Bay C4",
   },
 ];
 

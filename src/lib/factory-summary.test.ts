@@ -5,8 +5,8 @@ describe("getFactorySummary", () => {
   it("summarizes the current factory machine status", () => {
     const summary = getFactorySummary();
 
-    expect(summary.totalMachines).toBe(7);
-    expect(summary.normalMachines).toBe(5);
+    expect(summary.totalMachines).toBe(10);
+    expect(summary.normalMachines).toBe(8);
     expect(summary.warningMachines).toBe(1);
     expect(summary.criticalMachines).toBe(1);
     expect(summary.activeIncidents).toBe(2);
