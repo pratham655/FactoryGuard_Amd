@@ -5,7 +5,6 @@ import {
   Thermometer,
   Zap,
   Gauge,
-  AlertCircle,
   ChevronRight,
   ArrowUpRight,
 } from "lucide-react";
