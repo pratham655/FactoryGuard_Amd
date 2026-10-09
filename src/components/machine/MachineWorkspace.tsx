@@ -2,16 +2,12 @@
 
 import React, { useState } from "react";
 import {
-  Activity,
   AlertTriangle,
   BookOpen,
   Cpu,
-  Flame,
   Gauge,
   HeartPulse,
-  Layers,
   Radio,
-  ShieldAlert,
   ShieldCheck,
   Sparkles,
   Wrench,
