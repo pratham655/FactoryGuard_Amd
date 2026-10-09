@@ -52,8 +52,84 @@ describe("createVLLMClient", () => {
       fetchFn: fetchMock,
     });
 
-    await expect(client.chat("Investigate CNC-07.")).rejects.toThrow(
-      "Unable to reach the vLLM endpoint",
+    await expect(
+      client.chat("Investigate CNC-07."),
+    ).rejects.toThrow("Unable to reach the vLLM endpoint");
+  });
+
+  it("throws a clear error when the endpoint returns invalid JSON", async () => {
+    const client = createVLLMClient({
+      baseUrl: "http://localhost:8000",
+      model: "test-model",
+      fetchFn: async () =>
+        new Response("not valid json", {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }),
+    });
+
+    await expect(
+      client.chat("Investigate CNC-07"),
+    ).rejects.toThrow("vLLM returned invalid JSON");
+  });
+
+  it("throws a clear error when the response has no choices", async () => {
+    const client = createVLLMClient({
+      baseUrl: "http://localhost:8000",
+      model: "test-model",
+      fetchFn: async () =>
+        Response.json({
+          choices: [],
+        }),
+    });
+
+    await expect(
+      client.chat("Investigate CNC-07"),
+    ).rejects.toThrow("vLLM returned an empty response");
+  });
+
+  it("rejects whitespace-only model content", async () => {
+    const client = createVLLMClient({
+      baseUrl: "http://localhost:8000",
+      model: "test-model",
+      fetchFn: async () =>
+        Response.json({
+          choices: [
+            {
+              message: {
+                content: "   ",
+              },
+            },
+          ],
+        }),
+    });
+
+    await expect(
+      client.chat("Investigate CNC-07"),
+    ).rejects.toThrow("vLLM returned an empty response");
+  });
+
+  it("throws a clear timeout error when the endpoint takes too long", async () => {
+    const client = createVLLMClient({
+      baseUrl: "http://localhost:8000",
+      model: "test-model",
+      timeoutMs: 5,
+      fetchFn: async (_input, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener(
+            "abort",
+            () => reject(new Error("Request aborted")),
+            { once: true },
+          );
+        }),
+    });
+
+    await expect(
+      client.chat("Investigate CNC-07"),
+    ).rejects.toThrow(
+      "vLLM request timed out after 5ms",
     );
   });
 });

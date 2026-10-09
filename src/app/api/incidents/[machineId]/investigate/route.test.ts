@@ -33,6 +33,26 @@ describe("POST /api/incidents/[machineId]/investigate", () => {
         expect.stringContaining("maintenance:CNC-07:2026-09-18"),
       ]),
     );
+
+    // Verify the actual parsed API response preserves Unicode correctly.
+    expect(body.evidence).toContain("Temperature reached 91.4°C");
+
+    expect(
+      body.evidence.some((line: string) =>
+        line.includes("Maintenance history — CNC-07"),
+      ),
+    ).toBe(true);
+
+    // Guard against common UTF-8/Windows-1252 mojibake.
+    expect(
+      body.evidence.some((line: string) => line.includes("Â°C")),
+    ).toBe(false);
+
+    expect(
+      body.evidence.some((line: string) =>
+        line.includes("Maintenance history â CNC-07"),
+      ),
+    ).toBe(false);
   });
 
   it("returns 404 for an unknown machine", async () => {
