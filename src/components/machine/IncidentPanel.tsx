@@ -1,5 +1,10 @@
 import React from "react";
-import { AlertOctagon, AlertTriangle, CheckCircle2, Flame, ShieldAlert, Cpu } from "lucide-react";
+import {
+  AlertOctagon,
+  AlertTriangle,
+  CheckCircle2,
+  Flame,
+} from "lucide-react";
 import type { Machine } from "@/lib/factory-data";
 
 interface IncidentPanelProps {
