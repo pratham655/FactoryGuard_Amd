@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   createSimulationState,
   advanceSimulation,
-  type SimulationState,
 } from "./simulation-engine";
 
 describe("simulation-engine", () => {
