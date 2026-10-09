@@ -2,13 +2,11 @@
 
 import React, { useState } from "react";
 import {
-  ShieldAlert,
   CheckCircle2,
   XCircle,
   UserCheck,
   AlertTriangle,
   Lock,
-  Radio,
 } from "lucide-react";
 
 interface ApprovalPanelProps {
@@ -23,7 +21,6 @@ export function ApprovalPanel({
   machineId,
 }: ApprovalPanelProps) {
   const [status, setStatus] = useState<"pending" | "approved" | "rejected">("pending");
-  const [operatorNotes, setOperatorNotes] = useState("");
   const [timestamp, setTimestamp] = useState<string | null>(null);
 
   const handleApprove = () => {
