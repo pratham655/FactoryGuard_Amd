@@ -1,6 +1,9 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowLeft, AlertOctagon, Factory } from "lucide-react";
+import {
+  ArrowLeft,
+  AlertOctagon,
+} from "lucide-react";
 import { getFactoryMachines } from "@/lib/factory-data";
 import { getMaintenanceHistory } from "@/lib/maintenance-history";
 import { FactorySidebar } from "@/components/layout/FactorySidebar";
