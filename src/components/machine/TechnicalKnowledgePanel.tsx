@@ -1,8 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { BookOpen, Search, FileText, ArrowRight, ExternalLink } from "lucide-react";
-import { searchTechnicalKnowledge, type TechnicalKnowledge } from "@/lib/technical-knowledge";
+import {
+  BookOpen,
+  Search,
+  FileText,
+  ExternalLink,
+} from "lucide-react";
+import { searchTechnicalKnowledge } from "@/lib/technical-knowledge";
 
 interface TechnicalKnowledgePanelProps {
   machineId: string;
