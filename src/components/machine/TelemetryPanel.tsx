@@ -6,7 +6,6 @@ import {
   Gauge,
   AlertOctagon,
   CheckCircle2,
-  Sliders,
   Radio,
 } from "lucide-react";
 import type { MachineTelemetry } from "@/lib/incident-detector";
@@ -102,7 +101,6 @@ export function TelemetryPanel({ telemetry, machineId }: TelemetryPanelProps) {
       {/* Telemetry Sensor Channel Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {telemetryItems.map((item) => {
-          const Icon = item.icon;
           const isCritical = item.status === "critical";
           const isWarning = item.status === "warning";
 
