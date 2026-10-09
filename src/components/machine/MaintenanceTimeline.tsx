@@ -5,7 +5,6 @@ import {
   Calendar,
   CheckCircle2,
   FileCheck,
-  AlertCircle,
 } from "lucide-react";
 import type { MaintenanceRecord } from "@/lib/maintenance-history";
 
