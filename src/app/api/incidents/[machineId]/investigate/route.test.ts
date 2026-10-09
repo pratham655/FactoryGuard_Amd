@@ -1,40 +1,54 @@
+
 import { describe, expect, it } from "vitest";
 import { POST } from "./route";
 
 describe("POST /api/incidents/[machineId]/investigate", () => {
-  it("returns an investigation for a valid machine", async () => {
+  it("returns critical investigation with traceable evidence for CNC-07", async () => {
     const response = await POST(
-      new Request("http://localhost/api/incidents/CNC-07/investigate"),
+      new Request(
+        "http://localhost/api/incidents/CNC-07/investigate",
+        { method: "POST" },
+      ),
       {
-        params: Promise.resolve({
-          machineId: "CNC-07",
-        }),
+        params: Promise.resolve({ machineId: "CNC-07" }),
       },
     );
 
-    expect(response.status).toBe(200);
-
     const body = await response.json();
 
+    expect(response.status).toBe(200);
     expect(body.machineId).toBe("CNC-07");
     expect(body.severity).toBe("critical");
-    expect(body.probableCause).toBe(
-      "Possible spindle bearing degradation",
-    );
+    expect(body.probableCause).toContain("spindle bearing");
+    expect(body.confidence).toBeGreaterThan(0);
+    expect(body.recommendedAction).toContain("Stop the machine");
     expect(body.requiresHumanApproval).toBe(true);
-    expect(body.evidence.length).toBeGreaterThan(0);
+
+    expect(body.evidence).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("91.4"),
+        expect.stringContaining("8.7"),
+        expect.stringContaining("E-204"),
+        expect.stringContaining("Spindle Vibration Maintenance Guidance"),
+        expect.stringContaining("maintenance:CNC-07:2026-09-18"),
+      ]),
+    );
   });
 
   it("returns 404 for an unknown machine", async () => {
     const response = await POST(
-      new Request("http://localhost/api/incidents/UNKNOWN/investigate"),
+      new Request(
+        "http://localhost/api/incidents/UNKNOWN-99/investigate",
+        { method: "POST" },
+      ),
       {
-        params: Promise.resolve({
-          machineId: "UNKNOWN",
-        }),
+        params: Promise.resolve({ machineId: "UNKNOWN-99" }),
       },
     );
 
     expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({
+      error: "Machine not found",
+    });
   });
 });

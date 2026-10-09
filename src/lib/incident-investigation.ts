@@ -1,6 +1,8 @@
+
 import { getFactoryMachines } from "./factory-data";
 import type { IncidentSeverity } from "./incident-detector";
 import { getMaintenanceHistory } from "./maintenance-history";
+import { retrieveEvidence } from "./evidence-retriever";
 
 export type IncidentInvestigation = {
   machineId: string;
@@ -16,7 +18,7 @@ export function investigateIncident(
   machineId: string,
 ): IncidentInvestigation {
   const machine = getFactoryMachines().find(
-    (machine) => machine.id === machineId,
+    (item) => item.id === machineId,
   );
 
   if (!machine) {
@@ -24,18 +26,51 @@ export function investigateIncident(
   }
 
   const { telemetry, status } = machine;
+
   const maintenanceHistory = getMaintenanceHistory(machineId);
 
   const maintenanceEvidence = maintenanceHistory.map(
     (record) =>
-      `Maintenance on ${record.date}: ${record.issue}. Action: ${record.action}.`,
+      `Maintenance on ${record.date}: ${record.issue}. ` +
+      `Action: ${record.action}.`,
   );
+
+  const probableCause =
+    status === "critical"
+      ? "Possible spindle bearing degradation"
+      : status === "warning"
+        ? "Abnormal machine operating conditions detected"
+        : null;
+
+  // Retrieve supporting documents for active incidents only.
+  const query =
+    status === "critical"
+      ? `spindle bearing degradation vibration ${telemetry.errorCode ?? ""} temperature`
+      : status === "warning"
+        ? `temperature vibration maintenance ${telemetry.errorCode ?? ""}`
+        : "";
+
+  const retrievedEvidence =
+    query.length > 0
+      ? retrieveEvidence(query, machineId, 5)
+      : [];
+
+  const retrievedEvidenceLines = retrievedEvidence.map(
+    (item) =>
+      `Retrieved source [${item.sourceId}] (${item.source}): ` +
+      `${item.title}. ${item.content}`,
+  );
+
+  const baseEvidence = [
+    `Temperature: ${telemetry.temperature}°C`,
+    `Vibration: ${telemetry.vibration} mm/s`,
+  ];
 
   if (status === "critical") {
     return {
       machineId,
       severity: status,
-      probableCause: "Possible spindle bearing degradation",
+      probableCause,
       confidence: 0.92,
       evidence: [
         `Temperature reached ${telemetry.temperature}°C`,
@@ -43,6 +78,7 @@ export function investigateIncident(
         `Machine reported error code ${telemetry.errorCode ?? "none"}`,
         `Motor current reached ${telemetry.motorCurrent} A`,
         ...maintenanceEvidence,
+        ...retrievedEvidenceLines,
       ],
       recommendedAction:
         "Stop the machine and inspect the spindle bearing before returning it to production.",
@@ -54,12 +90,12 @@ export function investigateIncident(
     return {
       machineId,
       severity: status,
-      probableCause: "Abnormal machine operating conditions detected",
+      probableCause,
       confidence: 0.75,
       evidence: [
-        `Temperature: ${telemetry.temperature}°C`,
-        `Vibration: ${telemetry.vibration} mm/s`,
+        ...baseEvidence,
         ...maintenanceEvidence,
+        ...retrievedEvidenceLines,
       ],
       recommendedAction:
         "Schedule a maintenance inspection and continue monitoring the machine.",
@@ -73,8 +109,7 @@ export function investigateIncident(
     probableCause: null,
     confidence: 0.99,
     evidence: [
-      `Temperature: ${telemetry.temperature}°C`,
-      `Vibration: ${telemetry.vibration} mm/s`,
+      ...baseEvidence,
       "No active machine error reported",
       ...maintenanceEvidence,
     ],
