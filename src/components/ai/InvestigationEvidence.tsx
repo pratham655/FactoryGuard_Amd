@@ -1,5 +1,9 @@
 import React from "react";
-import { CheckCircle, AlertCircle, FileText, ArrowRight } from "lucide-react";
+import {
+  CheckCircle,
+  AlertCircle,
+  FileText,
+} from "lucide-react";
 
 interface InvestigationEvidenceProps {
   evidence: string[];
