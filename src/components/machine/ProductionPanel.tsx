@@ -1,5 +1,7 @@
 import React from "react";
-import { Gauge, Clock, PackageCheck, AlertTriangle, Layers } from "lucide-react";
+import {
+  Gauge,
+} from "lucide-react";
 import type { Machine } from "@/lib/factory-data";
 
 interface ProductionPanelProps {
