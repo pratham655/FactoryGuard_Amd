@@ -3,18 +3,10 @@
 import React, { useState } from "react";
 import {
   Sparkles,
-  Cpu,
   AlertTriangle,
-  CheckCircle,
-  Clock,
   ShieldCheck,
   RotateCw,
-  Zap,
-  Server,
   Terminal,
-  Activity,
-  ArrowRight,
-  Lock,
 } from "lucide-react";
 import { InvestigationEvidence } from "@/components/ai/InvestigationEvidence";
 import { ApprovalPanel } from "@/components/ai/ApprovalPanel";
