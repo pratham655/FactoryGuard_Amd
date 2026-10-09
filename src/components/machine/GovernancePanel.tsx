@@ -1,5 +1,7 @@
 import React from "react";
-import { ShieldCheck, Lock, FileCheck, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  ShieldCheck,
+} from "lucide-react";
 import type { Machine } from "@/lib/factory-data";
 
 interface GovernancePanelProps {
