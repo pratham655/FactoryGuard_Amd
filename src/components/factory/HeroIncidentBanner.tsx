@@ -8,7 +8,6 @@ import {
   Zap,
   Gauge,
   ArrowRight,
-  ShieldAlert,
 } from "lucide-react";
 import type { Machine } from "@/lib/factory-data";
 
