@@ -3,12 +3,9 @@
 import React, { useState } from "react";
 import {
   Factory,
-  Filter,
   Layers,
   LayoutGrid,
-  List,
   Search,
-  SlidersHorizontal,
 } from "lucide-react";
 import { ProductionLine } from "@/components/factory/ProductionLine";
 import { MachineCard } from "@/components/factory/MachineCard";
