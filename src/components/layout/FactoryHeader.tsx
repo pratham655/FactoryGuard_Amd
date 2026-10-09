@@ -3,12 +3,8 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Activity,
   AlertTriangle,
   Clock,
-  Radio,
-  Sliders,
-  Sparkles,
   Layers,
 } from "lucide-react";
 import { StatusIndicator } from "@/components/factory/StatusIndicator";
