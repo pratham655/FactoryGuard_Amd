@@ -1,5 +1,7 @@
 import React from "react";
-import { ShieldAlert, HeartPulse, Gauge, Layers, AlertTriangle } from "lucide-react";
+import {
+  HeartPulse,
+} from "lucide-react";
 import type { Machine } from "@/lib/factory-data";
 
 interface HealthRiskPanelProps {
