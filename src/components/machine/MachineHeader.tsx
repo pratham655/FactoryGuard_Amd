@@ -2,13 +2,10 @@ import React from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  Cpu,
   MapPin,
   Layers,
   Sparkles,
   Download,
-  AlertOctagon,
-  RefreshCw,
 } from "lucide-react";
 import { StatusIndicator } from "@/components/factory/StatusIndicator";
 import type { Machine } from "@/lib/factory-data";
