@@ -325,7 +325,6 @@ export function ApprovalPanel({
               Close after escalation
             </button>
           )}
-          {status === "closed" && <p className="font-bold text-slate-300">INCIDENT CLOSED — rejection and escalation retained.</p>}
           {error && <p role="alert" className="text-xs text-red-300">{error}</p>}
           <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-800 flex flex-wrap justify-between gap-2">
             <span>INCIDENT: {incidentId}</span>
