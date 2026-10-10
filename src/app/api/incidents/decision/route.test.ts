@@ -29,7 +29,7 @@ describe("POST /api/incidents/decision", () => {
   });
 
   it("requires an operator identity", async () => {
-    const incident = makeIncident();
+    const incident = await makeIncident();
     const response = await POST(new Request("http://localhost/api/incidents/decision", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -41,7 +41,7 @@ describe("POST /api/incidents/decision", () => {
   });
 
   it("requires a rejection reason", async () => {
-    const incident = makeIncident();
+    const incident = await makeIncident();
     const response = await POST(new Request("http://localhost/api/incidents/decision", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -53,7 +53,7 @@ describe("POST /api/incidents/decision", () => {
   });
 
   it("rejects a second decision for an already decided incident", async () => {
-    const incident = makeIncident();
+    const incident = await makeIncident();
     const first = await POST(new Request("http://localhost/api/incidents/decision", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
