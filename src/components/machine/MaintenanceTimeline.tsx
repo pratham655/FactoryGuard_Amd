@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import {
   Wrench,
   Clock,
@@ -13,10 +15,50 @@ interface MaintenanceTimelineProps {
   machineId: string;
 }
 
+interface SavedIncidentLifecycle {
+  id: string;
+  status: string;
+  history: string[];
+  createdAt: string;
+  updatedAt: string;
+  approvedBy?: string | null;
+  rejectedBy?: string | null;
+  rejectionReason?: string | null;
+}
+
+interface IncidentApiResponse {
+  incident?: SavedIncidentLifecycle | null;
+  error?: string;
+}
+
 export function MaintenanceTimeline({
   records,
   machineId,
 }: MaintenanceTimelineProps) {
+  const [savedIncident, setSavedIncident] = useState<SavedIncidentLifecycle | null>(null);
+  const [lifecycleError, setLifecycleError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadLifecycle() {
+      try {
+        const response = await fetch("/api/incidents/by-machine/" + encodeURIComponent(machineId), {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const data = (await response.json().catch(() => ({}))) as IncidentApiResponse;
+        if (!response.ok) throw new Error(data.error ?? "Unable to load saved lifecycle.");
+        setSavedIncident(data.incident ?? null);
+        setLifecycleError(null);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setLifecycleError(error instanceof Error ? error.message : "Unable to load saved lifecycle.");
+      }
+    }
+    void loadLifecycle();
+    return () => controller.abort();
+  }, [machineId]);
+
   return (
     <div
       id="maintenance"
@@ -41,6 +83,35 @@ export function MaintenanceTimeline({
           {records.length} {records.length === 1 ? "Record" : "Records"} on File
         </span>
       </div>
+
+      {lifecycleError && (
+        <p role="status" className="rounded-lg border border-amber-500/30 bg-amber-950/20 p-3 font-mono text-xs text-amber-200">
+          Saved incident lifecycle could not be loaded: {lifecycleError}
+        </p>
+      )}
+
+      {savedIncident && (
+        <div className="space-y-3 rounded-lg border border-cyan-500/20 bg-slate-950/70 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h4 className="font-mono text-xs font-bold uppercase tracking-wider text-cyan-300">Persisted incident lifecycle</h4>
+            <span className="rounded border border-slate-700 bg-slate-900 px-2 py-1 font-mono text-[10px] text-slate-300">
+              {savedIncident.status.replace(/_/g, " ").toUpperCase()}
+            </span>
+          </div>
+          <p className="break-all font-mono text-[10px] text-slate-500">INCIDENT: {savedIncident.id}</p>
+          <ol className="flex flex-wrap gap-2">
+            {savedIncident.history.map((status, index) => (
+              <li key={status + "-" + index} className="rounded border border-slate-700 bg-slate-900 px-2 py-1 font-mono text-[10px] text-slate-300">
+                {index + 1}. {status.replace(/_/g, " ").toUpperCase()}
+              </li>
+            ))}
+          </ol>
+          {savedIncident.approvedBy && <p className="font-mono text-xs text-emerald-300">Approved by: {savedIncident.approvedBy}</p>}
+          {savedIncident.rejectedBy && <p className="font-mono text-xs text-red-300">Rejected by: {savedIncident.rejectedBy}</p>}
+          {savedIncident.rejectionReason && <p className="font-mono text-xs text-slate-300">Rejection reason: {savedIncident.rejectionReason}</p>}
+          <p className="font-mono text-[10px] text-slate-500">Last updated: {new Date(savedIncident.updatedAt).toLocaleString()}</p>
+        </div>
+      )}
 
       {records.length === 0 ? (
         <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-8 text-center">
