@@ -361,6 +361,30 @@ export function InvestigationPanel({
           </div>
         )}
 
+        {!investigation && savedIncident && incidentId && (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-5 space-y-2">
+              <h4 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-400">Restored incident recommendation</h4>
+              <p className="font-mono text-sm font-bold text-white">{savedIncident.probableCause || "Probable cause not recorded"}</p>
+              <p className="font-mono text-sm text-slate-300">{savedIncident.recommendedAction}</p>
+              <p className="font-mono text-xs text-slate-400">Severity: {savedIncident.severity.toUpperCase()} · Lifecycle: {savedIncident.status.replace(/_/g, " ").toUpperCase()}</p>
+            </div>
+            <ApprovalPanel
+              key={incidentId}
+              requiresHumanApproval={savedIncident.requiresHumanApproval}
+              recommendedAction={savedIncident.recommendedAction}
+              machineId={machineId}
+              incidentId={incidentId}
+              initialStatus={savedIncident.status}
+              initialApprovedBy={savedIncident.approvedBy}
+              initialRejectedBy={savedIncident.rejectedBy}
+              initialRejectionReason={savedIncident.rejectionReason}
+              initialUpdatedAt={savedIncident.updatedAt}
+              onIncidentUpdated={(incident) => setSavedIncident((current) => current ? { ...current, ...incident } : current)}
+            />
+          </div>
+        )}
+
         {/* Investigation report */}
         {investigation && !isLoading && (
           <div className="space-y-6">
