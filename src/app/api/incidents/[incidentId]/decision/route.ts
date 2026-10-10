@@ -33,7 +33,7 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   try {
-    const incident = decideIncident(
+    const incident = await decideIncident(
       incidentId,
       decision,
       operator,
