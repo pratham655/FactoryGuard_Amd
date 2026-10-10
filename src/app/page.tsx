@@ -15,7 +15,6 @@ export default async function Home() {
 
   const summary = getFactorySummary();
   const machines = getFactoryMachines();
-  const criticalMachine = machines.find((m) => m.status === "critical") ?? machines.find((m) => m.id === "CNC-07");
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col">
