@@ -5,8 +5,15 @@ vi.mock("@clerk/nextjs/server", () => ({
   auth: vi.fn().mockResolvedValue({ userId: "test-user" }),
 }));
 
-vi.mock("@/components/layout/FactoryHeader", () => ({
-  FactoryHeader: () => <header>FactoryGuard header</header>,
+vi.mock("@clerk/nextjs", () => ({
+  useUser: () => ({
+    isLoaded: true,
+    user: {
+      fullName: "Test Operator",
+      primaryEmailAddress: { emailAddress: "test@example.com" },
+    },
+  }),
+  UserButton: () => null,
 }));
 
 import Home from "./page";
