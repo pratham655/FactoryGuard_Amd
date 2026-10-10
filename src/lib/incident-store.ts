@@ -3,7 +3,6 @@ import {
   transitionIncident,
   type IncidentInput,
   type IncidentRecord,
-  type IncidentStatus,
 } from "@/lib/incident-lifecycle";
 
 type StoreState = { records: Map<string, IncidentRecord> };
@@ -11,7 +10,10 @@ const globalStore = globalThis as typeof globalThis & { __factoryGuardIncidents?
 const store = (globalStore.__factoryGuardIncidents ??= { records: new Map() });
 
 export function addIncident(input: IncidentInput): IncidentRecord {
-  const record = createIncidentRecord(input);
+  let record = createIncidentRecord(input);
+  record = transitionIncident(record, "investigating");
+  record = transitionIncident(record, "recommended");
+  record = transitionIncident(record, "awaiting_approval");
   store.records.set(record.id, record);
   return record;
 }
@@ -29,10 +31,13 @@ export function decideIncident(
   const current = getIncident(id);
   if (!current) throw new Error("Incident not found");
 
-  const nextStatus: IncidentStatus = decision === "approve" ? "approved" : "rejected";
-  const updated = transitionIncident(current, nextStatus, decision === "approve"
-    ? { approvedBy: operator }
-    : { rejectedBy: operator, rejectionReason: reason });
+  const updated = transitionIncident(
+    current,
+    decision === "approve" ? "approved" : "rejected",
+    decision === "approve"
+      ? { approvedBy: operator }
+      : { rejectedBy: operator, rejectionReason: reason },
+  );
   store.records.set(id, updated);
   return updated;
 }
