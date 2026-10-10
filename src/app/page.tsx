@@ -5,9 +5,7 @@ import { getFactoryMachines } from "@/lib/factory-data";
 import { getFactorySummary } from "@/lib/factory-summary";
 import { FactorySidebar } from "@/components/layout/FactorySidebar";
 import { FactoryHeader } from "@/components/layout/FactoryHeader";
-import { FactoryKPIs } from "@/components/factory/FactoryKPIs";
-import { HeroIncidentBanner } from "@/components/factory/HeroIncidentBanner";
-import { FactoryFloor } from "@/components/factory/FactoryFloor";
+import { LiveFactoryDashboard } from "@/components/factory/LiveFactoryDashboard";
 
 export default async function Home() {
   const { userId } = await auth();
@@ -39,9 +37,7 @@ export default async function Home() {
               <span>SHOP FLOOR BUS ACTIVE</span>
             </div>
           </div>
-          <FactoryKPIs summary={summary} />
-          <HeroIncidentBanner criticalMachine={criticalMachine} />
-          <FactoryFloor machines={machines} />
+          <LiveFactoryDashboard initialMachines={machines} />
         </main>
       </div>
     </div>
