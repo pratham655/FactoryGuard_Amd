@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
+import type { IncidentStatus } from "@/lib/incident-lifecycle";
 import {
   CheckCircle2,
   XCircle,
@@ -16,7 +17,8 @@ interface ApprovalPanelProps {
   recommendedAction: string;
   machineId: string;
   incidentId: string;
-  initialStatus?: "awaiting_approval" | "approved" | "rejected";
+  initialStatus?: IncidentStatus;
+  onIncidentUpdated?: (incident: { id: string; status: IncidentStatus; approvedBy: string | null; rejectedBy: string | null; rejectionReason: string | null; updatedAt: string }) => void;
   initialApprovedBy?: string | null;
   initialRejectedBy?: string | null;
   initialRejectionReason?: string | null;
@@ -29,6 +31,7 @@ export function ApprovalPanel({
   machineId,
   incidentId,
   initialStatus = "awaiting_approval",
+  onIncidentUpdated,
   initialApprovedBy = null,
   initialRejectedBy = null,
   initialRejectionReason = null,
@@ -91,6 +94,7 @@ export function ApprovalPanel({
       const incident = data.incident;
 
       setStatus(incident.status);
+      onIncidentUpdated?.(incident);
 
       setOperator(
         decision === "approve"
@@ -109,6 +113,32 @@ export function ApprovalPanel({
           ? err.message
           : "Unable to record decision.",
       );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const advanceLifecycle = async (nextStatus: "maintenance" | "recovered" | "closed") => {
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/incidents/${encodeURIComponent(incidentId)}/lifecycle`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(typeof data.error === "string" ? data.error : "Unable to update incident lifecycle.");
+      }
+      const incident = data.incident;
+      setStatus(incident.status);
+      setOperator(incident.approvedBy ?? incident.rejectedBy ?? "");
+      setReason(incident.rejectionReason ?? "");
+      setTimestamp(new Date(incident.updatedAt).toUTCString());
+      onIncidentUpdated?.(incident);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to update incident lifecycle.");
     } finally {
       setIsSubmitting(false);
     }
@@ -225,8 +255,8 @@ export function ApprovalPanel({
             </button>
           </div>
         </div>
-      ) : status === "approved" ? (
-        <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/20 p-4 space-y-2 font-mono text-xs">
+      ) : status === "approved" || status === "maintenance" || status === "recovered" || status === "closed" ? (
+        <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/20 p-4 space-y-3 font-mono text-xs">
           <div className="flex items-center gap-2 text-emerald-400 font-bold">
             <CheckCircle2 className="w-4 h-4" />
             <span>RECOMMENDATION APPROVED</span>
@@ -241,6 +271,32 @@ export function ApprovalPanel({
             Operator: {operator || initialApprovedBy || "Unknown"}
           </p>
 
+          <p className="text-cyan-200">
+            Lifecycle: <strong className="uppercase">{status.replace(/_/g, " ")}</strong>
+          </p>
+          {status === "approved" && (
+            <button type="button" onClick={() => void advanceLifecycle("maintenance")} disabled={isSubmitting}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-600 px-4 py-2.5 font-bold uppercase tracking-wider text-white hover:bg-cyan-500 disabled:opacity-60">
+              {isSubmitting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
+              Start maintenance
+            </button>
+          )}
+          {status === "maintenance" && (
+            <button type="button" onClick={() => void advanceLifecycle("recovered")} disabled={isSubmitting}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 font-bold uppercase tracking-wider text-white hover:bg-emerald-500 disabled:opacity-60">
+              {isSubmitting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
+              Mark machine recovered
+            </button>
+          )}
+          {status === "recovered" && (
+            <button type="button" onClick={() => void advanceLifecycle("closed")} disabled={isSubmitting}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-700 px-4 py-2.5 font-bold uppercase tracking-wider text-white hover:bg-slate-600 disabled:opacity-60">
+              {isSubmitting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
+              Close incident
+            </button>
+          )}
+          {status === "closed" && <p className="font-bold text-emerald-300">INCIDENT CLOSED — lifecycle complete.</p>}
+          {error && <p role="alert" className="text-xs text-red-300">{error}</p>}
           <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-800 flex flex-wrap justify-between gap-2">
             <span>INCIDENT: {incidentId}</span>
             <span>{timestamp ?? "Decision recorded"}</span>
@@ -262,6 +318,15 @@ export function ApprovalPanel({
             Recorded by: {operator || initialRejectedBy || "Unknown"}
           </p>
 
+          {status === "rejected" && (
+            <button type="button" onClick={() => void advanceLifecycle("closed")} disabled={isSubmitting}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-700 px-4 py-2.5 font-bold uppercase tracking-wider text-white hover:bg-slate-600 disabled:opacity-60">
+              {isSubmitting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
+              Close after escalation
+            </button>
+          )}
+          {status === "closed" && <p className="font-bold text-slate-300">INCIDENT CLOSED — rejection and escalation retained.</p>}
+          {error && <p role="alert" className="text-xs text-red-300">{error}</p>}
           <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-800 flex flex-wrap justify-between gap-2">
             <span>INCIDENT: {incidentId}</span>
             <span>{timestamp ?? "Decision recorded"}</span>
