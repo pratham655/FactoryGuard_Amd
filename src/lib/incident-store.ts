@@ -6,6 +6,7 @@ import {
   transitionIncident,
   type IncidentInput,
   type IncidentRecord,
+  type IncidentStatus,
 } from "@/lib/incident-lifecycle";
 
 type StoreState = {
@@ -196,6 +197,57 @@ export async function decideIncident(
     throw new Error(
       "Incident disappeared after decision update",
     );
+  }
+
+  return saved;
+}
+
+/**
+ * Advances an incident through the maintenance/recovery lifecycle.
+ * The current status is used as a compare-and-set guard so concurrent
+ * requests cannot advance the same incident from a stale state.
+ */
+export async function advanceIncidentLifecycle(
+  id: string,
+  nextStatus: Extract<IncidentStatus, "maintenance" | "recovered" | "closed">,
+): Promise<IncidentRecord> {
+  const collection = await incidentCollection();
+  const current = collection
+    ? await collection.findOne({ id })
+    : store.records.get(id);
+
+  if (!current) {
+    throw new Error("Incident not found");
+  }
+
+  const updated = transitionIncident(current, nextStatus);
+
+  if (!collection) {
+    if (store.records.get(id)?.status !== current.status) {
+      throw new Error("Incident changed concurrently; refresh and try again");
+    }
+    store.records.set(id, updated);
+    return updated;
+  }
+
+  const result = await collection.updateOne(
+    { id, status: current.status },
+    {
+      $set: {
+        status: updated.status,
+        history: updated.history,
+        updatedAt: updated.updatedAt,
+      },
+    },
+  );
+
+  if (result.modifiedCount !== 1) {
+    throw new Error("Incident changed concurrently; refresh and try again");
+  }
+
+  const saved = await collection.findOne({ id });
+  if (!saved) {
+    throw new Error("Incident disappeared after lifecycle update");
   }
 
   return saved;
