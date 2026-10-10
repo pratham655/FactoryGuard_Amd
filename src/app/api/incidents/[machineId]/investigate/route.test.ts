@@ -8,6 +8,7 @@ vi.mock("@/lib/api-auth", () => ({
   }),
 }));
 import { POST } from "./route";
+import { applySimulationScenario, resetSimulation } from "@/lib/simulation-store";
 
 describe("POST /api/incidents/[machineId]/investigate", () => {
   it("returns critical investigation with traceable evidence for CNC-07", async () => {
@@ -60,6 +61,46 @@ describe("POST /api/incidents/[machineId]/investigate", () => {
         line.includes("Maintenance history â CNC-07"),
       ),
     ).toBe(false);
+  });
+
+  it("passes injected simulation telemetry into the saved investigation", async () => {
+    resetSimulation();
+    applySimulationScenario("CNC-03", "thermal-overload");
+
+    try {
+      const response = await POST(
+        new Request(
+          "http://localhost/api/incidents/CNC-03/investigate",
+          { method: "POST" },
+        ),
+        {
+          params: Promise.resolve({ machineId: "CNC-03" }),
+        },
+      );
+
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.machineId).toBe("CNC-03");
+      expect(body.evidence).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("77°C"),
+          expect.stringContaining("E-301"),
+        ]),
+      );
+      expect(body.incident).toMatchObject({
+        machineId: "CNC-03",
+        status: "awaiting_approval",
+      });
+      expect(body.incident.evidence ?? body.evidence).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("77°C"),
+          expect.stringContaining("E-301"),
+        ]),
+      );
+    } finally {
+      resetSimulation();
+    }
   });
 
   it("returns 404 for an unknown machine", async () => {
