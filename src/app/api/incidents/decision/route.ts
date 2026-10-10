@@ -1,24 +1,11 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { decideIncident } from "@/lib/incident-store";
+import { requireFactoryGuardRole } from "@/lib/api-auth";
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-  }
-
-  const user = await currentUser();
-  if (!user || user.id !== userId) {
-    return NextResponse.json({ error: "Unable to verify signed-in user" }, { status: 401 });
-  }
-
-  const role = user.publicMetadata?.role;
-  if (role !== "owner" && role !== "employee") {
-    return NextResponse.json(
-      { error: "Your account has no FactoryGuard role. Ask the owner to assign owner or employee access." },
-      { status: 403 },
-    );
+  const authorization = await requireFactoryGuardRole();
+  if (!authorization.authorized) {
+    return authorization.response;
   }
 
   let body: unknown;
@@ -36,7 +23,7 @@ export async function POST(request: Request) {
   const incidentId = typeof payload.incidentId === "string" ? payload.incidentId.trim() : "";
   const decision = payload.decision;
   const reason = typeof payload.reason === "string" ? payload.reason.trim() : "";
-  const operator = user.fullName?.trim() || user.primaryEmailAddress?.emailAddress || userId;
+  const { operator } = authorization.identity;
 
   if (!incidentId) {
     return NextResponse.json({ error: "Incident ID is required" }, { status: 400 });
