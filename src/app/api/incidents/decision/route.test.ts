@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { POST } from "./route";
 import { addIncident } from "@/lib/incident-store";
 
-function makeIncident() {
-  return addIncident({
+async function makeIncident() {
+  return await addIncident({
     machineId: "CNC-07",
     severity: "critical",
     probableCause: "Spindle bearing degradation",
@@ -14,7 +14,7 @@ function makeIncident() {
 
 describe("POST /api/incidents/decision", () => {
   it("records an approval with operator identity", async () => {
-    const incident = makeIncident();
+    const incident = await makeIncident();
     const response = await POST(new Request("http://localhost/api/incidents/decision", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
