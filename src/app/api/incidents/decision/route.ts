@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const incident = decideIncident(incidentId, decision, operator, reason);
+    const incident = await decideIncident(incidentId, decision, operator, reason);
     return NextResponse.json({ incident }, { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to record decision";
