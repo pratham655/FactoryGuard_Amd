@@ -10,6 +10,15 @@ interface ProductionPanelProps {
 
 export function ProductionPanel({ machine }: ProductionPanelProps) {
   const isCritical = machine.status === "critical";
+  const isWarning = machine.status === "warning";
+  const { temperature, vibration, motorCurrent } = machine.telemetry;
+  const workload = Math.min(95, Math.max(20, 45 + (motorCurrent - 10) * 4 + (temperature - 65) * 0.35));
+  const health = Math.min(100, Math.max(20, 100 - Math.max(0, temperature - 70) * 1.2 - Math.max(0, vibration - 3) * 4));
+  const availability = isCritical ? 0 : isWarning ? 65 : 97.8;
+  const performance = Math.min(100, Math.max(0, Math.round(workload * 1.08)));
+  const quality = Math.min(100, Math.max(70, 100 - Math.max(0, temperature - 75) * 0.12 - Math.max(0, vibration - 4) * 0.25));
+  const batchTarget = 50;
+  const batchCompleted = isCritical ? 24 : Math.min(batchTarget, Math.max(1, Math.round((health / 100) * batchTarget)));
 
   return (
     <div
@@ -32,39 +41,39 @@ export function ProductionPanel({ machine }: ProductionPanelProps) {
         </div>
 
         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-          SIMULATION EXTENSION READY
+          TELEMETRY-BASED ESTIMATE
         </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
         <div className="rounded-lg border border-slate-800 bg-slate-950/70 p-4 space-y-1">
           <span className="text-[10px] text-slate-500 uppercase">ACTIVE WORK ORDER</span>
-          <p className="text-sm font-bold text-white">WO-8842-AERO-TURBINE</p>
-          <p className="text-[11px] text-slate-400">Part: Ti-6Al-4V Impeller Housing</p>
+          <p className="text-sm font-bold text-white">DEMO-WO-{machine.id}</p>
+          <p className="text-[11px] text-slate-400">Illustrative work order for {machine.model}</p>
         </div>
 
         <div className="rounded-lg border border-slate-800 bg-slate-950/70 p-4 space-y-1">
           <span className="text-[10px] text-slate-500 uppercase">CURRENT CYCLE TIME</span>
-          <p className="text-sm font-bold text-white">{isCritical ? "HALTED (0.0s)" : "148.4s / target 145s"}</p>
-          <p className="text-[11px] text-slate-400">Deviation: {isCritical ? "N/A" : "+2.3%"}</p>
+          <p className="text-sm font-bold text-white">{isCritical ? "HALTED" : isWarning ? "DEGRADED" : "RUNNING"}</p>
+          <p className="text-[11px] text-slate-400">Estimated workload: {workload.toFixed(0)}%</p>
         </div>
 
         <div className="rounded-lg border border-slate-800 bg-slate-950/70 p-4 space-y-1">
           <span className="text-[10px] text-slate-500 uppercase">BATCH PROGRESS</span>
-          <p className="text-sm font-bold text-cyan-400">{isCritical ? "24 / 50 (PAUSED)" : "42 / 50 Pcs"}</p>
+          <p className="text-sm font-bold text-cyan-400">{batchCompleted} / {batchTarget} {isCritical ? "(PAUSED)" : "PCS (EST.)"}</p>
           <div className="mt-1 h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
             <div
               className={`h-full rounded-full ${isCritical ? "bg-amber-400" : "bg-cyan-400"}`}
-              style={{ width: isCritical ? "48%" : "84%" }}
+              style={{ width: `${(batchCompleted / batchTarget) * 100}%` }}
             />
           </div>
         </div>
       </div>
 
       <div className="rounded-lg border border-slate-800/80 bg-slate-950/50 p-3 flex items-center justify-between text-xs font-mono text-slate-400">
-        <span>OEE Availability: <strong className="text-white">{isCritical ? "45.2%" : "97.8%"}</strong></span>
-        <span>Performance: <strong className="text-white">{isCritical ? "0.0%" : "96.4%"}</strong></span>
-        <span>Quality Yield: <strong className="text-white">99.2%</strong></span>
+        <span>Availability estimate: <strong className="text-white">{availability.toFixed(1)}%</strong></span>
+        <span>Performance estimate: <strong className="text-white">{performance.toFixed(1)}%</strong></span>
+        <span>Quality estimate: <strong className="text-white">{quality.toFixed(1)}%</strong></span>
       </div>
     </div>
   );
