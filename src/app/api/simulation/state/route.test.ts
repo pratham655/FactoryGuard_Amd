@@ -1,4 +1,11 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/api-auth", () => ({
+  requireFactoryGuardRole: vi.fn(async () => ({
+    authorized: true,
+    identity: { userId: "test-user", operator: "Test Operator", role: "owner" },
+  })),
+}));
 
 import {
   getSimulationState,
@@ -19,6 +26,7 @@ describe("GET /api/simulation/state", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toContain("no-store");
     expect(body).toEqual(getSimulationState());
   });
 
