@@ -1,4 +1,5 @@
 import React from "react";
+import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { getFactoryMachines } from "@/lib/factory-data";
 import { getFactorySummary } from "@/lib/factory-summary";
@@ -11,8 +12,7 @@ import { FactoryFloor } from "@/components/factory/FactoryFloor";
 export default async function Home() {
   const { userId } = await auth();
   if (!userId) {
-    const { redirectToSignIn } = await import("@clerk/nextjs");
-    redirectToSignIn();
+    redirect("/sign-in");
   }
 
   const summary = getFactorySummary();
