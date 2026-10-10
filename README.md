@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FactoryGuard
 
-## Getting Started
+FactoryGuard is an AI-assisted industrial incident-response dashboard for a simulated 10-machine factory. It correlates machine telemetry, presents evidence and remediation guidance, and routes high-risk actions through a human decision workflow.
 
-First, run the development server:
+## Requirements
+
+- Node.js compatible with the installed Next.js version
+- npm
+- Optional: a Supabase project for durable incident storage
+- Optional: a reachable OpenAI-compatible vLLM endpoint
+
+## Run locally
 
 ```bash
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+On Windows PowerShell, use `Copy-Item .env.example .env.local` instead of `cp`. Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `VLLM_BASE_URL`: optional OpenAI-compatible vLLM API base URL
+- `VLLM_MODEL`: model name exposed by that endpoint
+- `SUPABASE_URL`: Supabase project URL
+- `SUPABASE_SERVICE_ROLE_KEY`: server-only Supabase service-role key
 
-## Learn More
+Keep `SUPABASE_SERVICE_ROLE_KEY` private. Never expose it in client code or commit real credentials. Configure both Supabase variables to enable database-backed incident records. If they are absent, the app uses a process-local in-memory fallback for development/tests; that fallback is not durable and must not be treated as production persistence.
 
-To learn more about Next.js, take a look at the following resources:
+## Enable durable incident storage
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. In the Supabase SQL Editor, run `supabase/migrations/202610100001_factoryguard_incidents.sql`.
+2. Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in the server environment.
+3. Restart the development server and run an investigation.
+4. Confirm the created record appears in the `factoryguard_incidents` table and that a decision updates its status and audit fields.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The service-role key bypasses Row Level Security, so access must remain server-side. The current operator field records a supplied name or staff ID; it does not authenticate the operator. Add real authentication/authorization before production use.
 
-## Deploy on Vercel
+## Verification
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm test
+npm run lint
+npm run build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Incident workflow
+
+Investigation creates an incident with a status history. The approval API validates the decision, requires an operator identity, requires a reason for rejection, and rejects decisions that are no longer awaiting approval. Database-backed decision writes use a status-filtered update to prevent competing decisions from both succeeding.
+
+## Current limitations
+
+- The local fallback is in-memory and resets with the process.
+- Operator identity is not yet verified against an authenticated account.
+- A successful test of the vLLM adapter does not prove a live model endpoint is reachable; verify live inference separately.
+- Maintenance/recovery UI and lifecycle transitions still need end-to-end completion.
