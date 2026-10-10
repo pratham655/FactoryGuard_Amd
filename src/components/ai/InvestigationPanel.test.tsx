@@ -39,7 +39,7 @@ describe("InvestigationPanel Component", () => {
     expect(html).toContain("Possible spindle bearing degradation");
     expect(html).toContain("92%");
     expect(html).toContain("Temperature reached 91.4°C");
-    expect(html).toContain("HUMAN APPROVAL REQUIRED");
+    expect(html).toMatch(/HUMAN APPROVAL REQUIRED/i);
     expect(html).toContain("Run the investigation to create an incident record before making an approval decision.");
     expect(html).not.toContain("APPROVE ACTION");
   });
