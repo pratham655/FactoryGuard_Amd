@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getLatestIncidentForMachine } from "@/lib/incident-store";
+import { requireFactoryGuardRole } from "@/lib/api-auth";
 
 interface RouteContext {
   params: Promise<{
@@ -11,9 +12,13 @@ export async function GET(
   _request: Request,
   context: RouteContext,
 ) {
+  const authorization = await requireFactoryGuardRole();
+  if (!authorization.authorized) {
+    return authorization.response;
+  }
+
   try {
     const { machineid } = await context.params;
-
     const machineId = decodeURIComponent(machineid).trim();
 
     if (!machineId) {
@@ -29,14 +34,11 @@ export async function GET(
       { incident },
       {
         status: 200,
-        headers: {
-          "Cache-Control": "no-store",
-        },
+        headers: { "Cache-Control": "no-store" },
       },
     );
   } catch (error) {
     console.error("Failed to retrieve machine incident:", error);
-
     return NextResponse.json(
       { error: "Unable to retrieve the machine incident." },
       { status: 500 },
