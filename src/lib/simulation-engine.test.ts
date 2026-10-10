@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createSimulationState,
   advanceSimulation,
+  injectScenario,
 } from "./simulation-engine";
 
 describe("simulation-engine", () => {
@@ -43,4 +44,29 @@ describe("simulation-engine", () => {
       expect(machine.workload).toBeLessThanOrEqual(100);
     }
   });
+  it("injects a scenario into the selected machine without changing other machines", () => {
+    const initialState = createSimulationState();
+    const otherMachineBefore = initialState.machines["CNC-01"];
+    const nextState = injectScenario(initialState, "CNC-07", "spindle-degradation");
+
+    expect(nextState.machines["CNC-07"].scenario).toBe("spindle-degradation");
+    expect(nextState.machines["CNC-07"].operatingState).toBe("degraded");
+    expect(nextState.machines["CNC-07"].vibration).toBeGreaterThan(initialState.machines["CNC-07"].vibration);
+    expect(nextState.machines["CNC-01"]).toEqual(otherMachineBefore);
+    expect(initialState.machines["CNC-07"].scenario).toBeNull();
+  });
+
+  it("rejects scenario injection for an unknown machine", () => {
+    expect(() => injectScenario(createSimulationState(), "CNC-99", "thermal-overload")).toThrow("Machine CNC-99 not found");
+  });
+
+  it("increases fault telemetry on each tick while a scenario is active", () => {
+    const initialState = injectScenario(createSimulationState(), "CNC-02", "thermal-overload");
+    const nextState = advanceSimulation(initialState);
+
+    expect(nextState.tick).toBe(initialState.tick + 1);
+    expect(nextState.machines["CNC-02"].temperature).toBeGreaterThan(initialState.machines["CNC-02"].temperature);
+    expect(nextState.machines["CNC-02"].scenario).toBe("thermal-overload");
+  });
+
 });
