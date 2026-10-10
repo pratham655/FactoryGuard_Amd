@@ -65,7 +65,6 @@ export function FactoryHeader({ summary }: FactoryHeaderProps) {
         // Retain the last known summary on transient errors.
       }
     };
-    void refreshSummary();
     const summaryTimer = window.setInterval(() => void refreshSummary(), 1500);
     const updateTime = () => {
       const now = new Date();
