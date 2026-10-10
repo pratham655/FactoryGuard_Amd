@@ -23,6 +23,7 @@ export function InvestigationPanel({
 }: InvestigationPanelProps) {
   const [investigation, setInvestigation] =
     useState<AgentInvestigationResult | null>(initialInvestigation);
+  const [incidentId, setIncidentId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,8 +46,9 @@ export function InvestigationPanel({
         throw new Error("Unable to complete investigation.");
       }
 
-      const data: AgentInvestigationResult = await response.json();
+      const data: AgentInvestigationResult & { incident: { id: string } } = await response.json();
       setInvestigation(data);
+      setIncidentId(data.incident.id);
     } catch (err) {
       setError(
         err instanceof Error
@@ -284,11 +286,16 @@ export function InvestigationPanel({
             </div>
 
             {/* Human Approval Workflow Panel */}
-            <ApprovalPanel
-              requiresHumanApproval={investigation.requiresHumanApproval}
-              recommendedAction={investigation.recommendedAction}
-              machineId={machineId}
-            />
+            {incidentId ? (
+              <ApprovalPanel
+                requiresHumanApproval={investigation.requiresHumanApproval}
+                recommendedAction={investigation.recommendedAction}
+                machineId={machineId}
+                incidentId={incidentId}
+              />
+            ) : (
+              <p className="rounded-lg border border-amber-500/30 bg-amber-950/20 p-3 text-xs font-mono text-amber-200">Run the investigation to create an incident record before making an approval decision.</p>
+            )}
           </div>
         )}
       </div>
