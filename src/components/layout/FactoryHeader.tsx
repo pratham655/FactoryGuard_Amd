@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { UserButton, useUser } from "@clerk/nextjs";
 import {
@@ -10,16 +10,61 @@ import {
 } from "lucide-react";
 import { StatusIndicator } from "@/components/factory/StatusIndicator";
 import type { FactorySummary } from "@/lib/factory-summary";
+import { detectIncident } from "@/lib/incident-detector";
+import type { SimulationState } from "@/lib/simulation-engine";
 
 interface FactoryHeaderProps {
   summary: FactorySummary;
 }
 
+type SimulationResponse = { simulation: SimulationState; running: boolean };
+
 export function FactoryHeader({ summary }: FactoryHeaderProps) {
   const [timeStr, setTimeStr] = useState<string>("");
+  const [liveSummary, setLiveSummary] = useState<FactorySummary>(summary);
   const { isLoaded, user } = useUser();
 
   useEffect(() => {
+    let active = true;
+    const refreshSummary = async () => {
+      try {
+        const response = await fetch("/api/simulation/state", { cache: "no-store" });
+        if (!response.ok) return;
+        const payload = (await response.json()) as SimulationResponse;
+        const machines = Object.entries(payload.simulation.machines);
+        let normalMachines = 0;
+        let warningMachines = 0;
+        let criticalMachines = 0;
+        for (const [machineId, live] of machines) {
+          const baseline = (await import("@/lib/factory-data")).getFactoryMachines().find((machine) => machine.id === machineId);
+          if (!baseline) continue;
+          const severity = detectIncident({
+            ...baseline.telemetry,
+            temperature: live.temperature,
+            vibration: live.vibration,
+            motorCurrent: live.motorCurrent,
+            errorCode: live.scenario === null ? baseline.telemetry.errorCode : "SIM-FAULT",
+          }).severity;
+          if (severity === "critical") criticalMachines += 1;
+          else if (severity === "warning") warningMachines += 1;
+          else normalMachines += 1;
+        }
+        if (active && machines.length > 0) {
+          setLiveSummary({
+            totalMachines: machines.length,
+            normalMachines,
+            warningMachines,
+            criticalMachines,
+            activeIncidents: warningMachines + criticalMachines,
+            factoryStatus: warningMachines + criticalMachines > 0 ? "attention-required" : "healthy",
+          });
+        }
+      } catch {
+        // Retain the last known summary on transient errors.
+      }
+    };
+    void refreshSummary();
+    const summaryTimer = window.setInterval(() => void refreshSummary(), 1500);
     const updateTime = () => {
       const now = new Date();
       setTimeStr(
@@ -33,10 +78,10 @@ export function FactoryHeader({ summary }: FactoryHeaderProps) {
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
+    return () => { active = false; window.clearInterval(summaryTimer); clearInterval(interval); };
   }, []);
 
-  const isAttentionRequired = summary.factoryStatus === "attention-required";
+  const isAttentionRequired = liveSummary.factoryStatus === "attention-required";
   const displayName = user?.fullName || user?.primaryEmailAddress?.emailAddress || "Signed-in operator";
 
   return (
@@ -66,18 +111,18 @@ export function FactoryHeader({ summary }: FactoryHeaderProps) {
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/90 text-slate-300">
             <Layers className="w-3.5 h-3.5 text-cyan-400" />
-            <span><strong className="text-white">{summary.totalMachines}</strong> MACHINES MONITORED</span>
+            <span><strong className="text-white">{liveSummary.totalMachines}</strong> MACHINES MONITORED</span>
           </div>
           <Link
             href="#active-incidents"
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${
-              summary.activeIncidents > 0
+              liveSummary.activeIncidents > 0
                 ? "border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20"
                 : "border-slate-800 bg-slate-900/90 text-slate-400"
             }`}
           >
             <AlertTriangle className="w-3.5 h-3.5 animate-pulse text-red-400" />
-            <span><strong className="text-white">{summary.activeIncidents}</strong> ACTIVE {summary.activeIncidents === 1 ? "INCIDENT" : "INCIDENTS"}</span>
+            <span><strong className="text-white">{liveSummary.activeIncidents}</strong> ACTIVE {liveSummary.activeIncidents === 1 ? "INCIDENT" : "INCIDENTS"}</span>
           </Link>
           <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/90 px-3 py-1.5">
             <div className="min-w-0 max-w-40">
