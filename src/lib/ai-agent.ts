@@ -1,5 +1,6 @@
 import { getAIConfig, validateAIConfig } from "./ai-config";
 import { investigateIncident } from "./incident-investigation";
+import type { MachineTelemetry } from "./incident-detector";
 import { createVLLMClient } from "./vllm-client";
 
 export type AgentInvestigationResult = {
@@ -74,10 +75,11 @@ function parseModelRecommendation(content: string): ModelRecommendation {
 
 export async function investigateWithAgent(
   machineId: string,
+  telemetry?: MachineTelemetry,
 ): Promise<AgentInvestigationResult> {
   // The rule engine is the safety baseline: it supplies severity, trusted
   // telemetry/evidence, and whether a human must approve an intervention.
-  const baseline = investigateIncident(machineId);
+  const baseline = investigateIncident(machineId, telemetry);
   const fallback: AgentInvestigationResult = {
     ...baseline,
     agentSource: "factoryguard-rule-engine",
