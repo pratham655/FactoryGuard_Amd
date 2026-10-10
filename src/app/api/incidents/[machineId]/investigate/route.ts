@@ -12,7 +12,7 @@ export async function POST(_request: Request, context: RouteContext) {
 
   try {
     const investigation = await investigateWithAgent(machineId);
-    const incident = addIncident({
+    const incident = await addIncident({
       machineId: investigation.machineId,
       severity: investigation.severity,
       probableCause: investigation.probableCause,
