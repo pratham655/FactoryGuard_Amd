@@ -39,6 +39,15 @@ export async function requireFactoryGuardRole(): Promise<AuthorizationResult> {
   const role = user.publicMetadata?.role;
 
   if (role !== "owner" && role !== "employee") {
+    // Local diagnostic: compare this identity with the user edited in Clerk.
+    // Do not log keys, tokens, or other secrets.
+    console.warn("[FactoryGuard auth] Role check failed", {
+      sessionUserId: userId,
+      currentUserId: user.id,
+      primaryEmail: user.primaryEmailAddress?.emailAddress ?? null,
+      publicMetadataRole: role ?? null,
+    });
+
     return {
       authorized: false,
       response: NextResponse.json(
