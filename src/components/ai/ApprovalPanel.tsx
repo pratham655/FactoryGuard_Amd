@@ -58,11 +58,6 @@ export function ApprovalPanel({
   ) => {
     setError(null);
 
-    if (!operator.trim()) {
-      setError("Enter the operator's name or staff ID.");
-      return;
-    }
-
     if (decision === "reject" && !reason.trim()) {
       setError("A rejection reason is required.");
       return;
@@ -79,7 +74,6 @@ export function ApprovalPanel({
         body: JSON.stringify({
           incidentId,
           decision,
-          operator: operator.trim(),
           reason: reason.trim(),
         }),
       });
@@ -161,32 +155,14 @@ export function ApprovalPanel({
                 </p>
 
                 <p className="text-slate-300 mt-0.5">
-                  Decision is sent to the incident API and recorded
-                  in its current workflow store. This prototype does
-                  not authenticate staff identity.
+                  Decision is sent to the incident API. Clerk verifies the signed-in identity and server-side role before the decision is recorded.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label
-              htmlFor={`operator-${incidentId}`}
-              className="block text-xs font-mono text-slate-300"
-            >
-              OPERATOR NAME / STAFF ID
-            </label>
-
-            <input
-              id={`operator-${incidentId}`}
-              value={operator}
-              onChange={(event) =>
-                setOperator(event.target.value)
-              }
-              maxLength={120}
-              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white outline-none focus:border-cyan-500"
-              placeholder="Enter operator identity"
-            />
+          <div className="rounded-lg border border-cyan-500/20 bg-cyan-950/20 p-3 text-xs font-mono text-cyan-200">
+            Approver identity is verified by Clerk and recorded from your signed-in account.
           </div>
 
           <div className="space-y-1.5">
