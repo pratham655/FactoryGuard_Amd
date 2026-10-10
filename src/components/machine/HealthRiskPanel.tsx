@@ -1,41 +1,69 @@
 import React from "react";
-import {
-  HeartPulse,
-} from "lucide-react";
+import { HeartPulse } from "lucide-react";
 import type { Machine } from "@/lib/factory-data";
 
 interface HealthRiskPanelProps {
   machine: Machine;
 }
 
+type RiskSeverity = "critical" | "warning" | "normal";
+
+function clampRisk(value: number, maximum = 99): number {
+  return Math.max(2, Math.min(maximum, Math.round(value)));
+}
+
+function getSeverity(risk: number): RiskSeverity {
+  if (risk >= 65) return "critical";
+  if (risk >= 30) return "warning";
+  return "normal";
+}
+
+function formatRisk(risk: number): string {
+  const label = risk >= 65 ? "High heuristic risk" : risk >= 30 ? "Elevated estimate" : "Low estimate";
+  return `${risk}% (${label})`;
+}
+
 export function HealthRiskPanel({ machine }: HealthRiskPanelProps) {
-  const isCritical = machine.status === "critical";
-  const isWarning = machine.status === "warning";
+  const { temperature, vibration, motorCurrent, pressure } = machine.telemetry;
+
+  // Transparent demonstration heuristics, not calibrated failure probabilities.
+  const spindleRisk = clampRisk(
+    Math.max(0, temperature - 70) * 1.5 +
+      Math.max(0, vibration - 3) * 5 +
+      Math.max(0, motorCurrent - 12) * 2,
+  );
+  const motorRisk = clampRisk(
+    Math.max(0, temperature - 75) * 1.1 +
+      Math.max(0, motorCurrent - 13) * 4,
+    95,
+  );
+  const clampRiskEstimate = clampRisk(Math.abs(pressure - 4.1) * 18, 95);
+  const guidewayRisk = clampRisk(vibration * 2 + Math.max(0, temperature - 75), 90);
 
   const failureModes = [
     {
       component: "Spindle Angular Contact Bearing (Front)",
-      risk: isCritical ? "92% (High Risk)" : isWarning ? "45% (Moderate)" : "4% (Low)",
-      severity: isCritical ? "critical" : isWarning ? "warning" : "normal",
-      mechanism: "Micro-pitting / Raceway Spalling induced by thermal expansion",
+      risk: spindleRisk,
+      severity: getSeverity(spindleRisk),
+      mechanism: `Temperature ${temperature}°C and vibration ${vibration} mm/s contribute to this rule-based estimate.`,
     },
     {
       component: "Drive Motor Stator Winding Insulation",
-      risk: isCritical ? "38% (Elevated)" : "8% (Nominal)",
-      severity: isCritical ? "warning" : "normal",
-      mechanism: "Thermal fatigue from continuous 17.8A overcurrent draw",
+      risk: motorRisk,
+      severity: getSeverity(motorRisk),
+      mechanism: `Motor current ${motorCurrent} A and temperature ${temperature}°C contribute to this rule-based estimate.`,
     },
     {
       component: "Hydraulic Drawbar / Tool Clamp Assembly",
-      risk: "2% (Nominal)",
-      severity: "normal",
-      mechanism: "Normal clamping cycle wear within design limits",
+      risk: clampRiskEstimate,
+      severity: getSeverity(clampRiskEstimate),
+      mechanism: `Pressure reading ${pressure} bar is compared with a demonstration reference of 4.1 bar.`,
     },
     {
       component: "X/Y/Z Linear Guideway Trucks",
-      risk: "5% (Nominal)",
-      severity: "normal",
-      mechanism: "Standard lubrication film thickness verified",
+      risk: guidewayRisk,
+      severity: getSeverity(guidewayRisk),
+      mechanism: `Vibration ${vibration} mm/s and temperature ${temperature}°C contribute to this rule-based estimate.`,
     },
   ];
 
@@ -54,20 +82,19 @@ export function HealthRiskPanel({ machine }: HealthRiskPanelProps) {
               Component Health & Failure Risk Projections
             </h3>
             <p className="text-xs text-slate-400">
-              Telemetry-based heuristic risk indicators for {machine.id}; these are estimates, not validated failure probabilities or RUL predictions.
+              Telemetry-based heuristic indicators for {machine.id}; estimates only, not validated failure probabilities or remaining-useful-life predictions.
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 font-mono text-xs">
-          <span className="text-slate-400">PREDICTIVE MODEL:</span>
+          <span className="text-slate-400">ESTIMATE TYPE:</span>
           <span className="px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold">
-            RULE-BASED ESTIMATE
+            RULE-BASED
           </span>
         </div>
       </div>
 
-      {/* Failure Modes Grid */}
       <div className="space-y-3">
         {failureModes.map((item) => (
           <div
@@ -85,13 +112,13 @@ export function HealthRiskPanel({ machine }: HealthRiskPanelProps) {
                 {item.component}
               </span>
               <p className="text-slate-400 text-xs">
-                Failure Mechanism: {item.mechanism}
+                Heuristic inputs: {item.mechanism}
               </p>
             </div>
 
             <div className="shrink-0 flex md:flex-col items-end justify-between md:justify-center">
               <span className="text-[10px] uppercase text-slate-400 font-semibold">
-                PROBABILITY OF FAILURE
+                HEURISTIC RISK ESTIMATE
               </span>
               <span
                 className={`font-bold text-sm ${
@@ -102,7 +129,7 @@ export function HealthRiskPanel({ machine }: HealthRiskPanelProps) {
                       : "text-emerald-400"
                 }`}
               >
-                {item.risk}
+                {formatRisk(item.risk)}
               </span>
             </div>
           </div>
