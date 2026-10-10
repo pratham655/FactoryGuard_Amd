@@ -91,8 +91,13 @@ export function transitionIncident(
     );
   }
 
+  // Critical incidents always require approval, even if an upstream
+  // investigation payload incorrectly sets requiresHumanApproval to false.
+  const approvalRequired =
+    incident.severity === "critical" || incident.requiresHumanApproval;
+
   if (
-    incident.requiresHumanApproval &&
+    approvalRequired &&
     nextStatus === "maintenance" &&
     incident.status !== "approved"
   ) {
