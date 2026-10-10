@@ -13,7 +13,7 @@ import { InvestigationEvidence } from "@/components/ai/InvestigationEvidence";
 import { ApprovalPanel } from "@/components/ai/ApprovalPanel";
 import type { AgentInvestigationResult } from "@/lib/ai-agent";
 
-type IncidentStatus = "awaiting_approval" | "approved" | "rejected";
+type IncidentStatus = "detected" | "investigating" | "recommended" | "awaiting_approval" | "approved" | "rejected" | "maintenance" | "recovered" | "closed";
 
 interface SavedIncident {
   id: string;
@@ -165,7 +165,7 @@ export function InvestigationPanel({
         : "text-emerald-400";
 
   const incidentStatusClass =
-    savedIncident?.status === "approved"
+    savedIncident?.status === "approved" || savedIncident?.status === "maintenance" || savedIncident?.status === "recovered" || savedIncident?.status === "closed"
       ? "border-emerald-500/40 bg-emerald-950/30 text-emerald-300"
       : savedIncident?.status === "rejected"
         ? "border-red-500/40 bg-red-950/30 text-red-300"
@@ -508,6 +508,7 @@ export function InvestigationPanel({
                   savedIncident?.rejectionReason
                 }
                 initialUpdatedAt={savedIncident?.updatedAt}
+                onIncidentUpdated={(incident) => setSavedIncident(incident)}
               />
             ) : (
               <p className="rounded-lg border border-amber-500/30 bg-amber-950/20 p-3 font-mono text-xs text-amber-200">
