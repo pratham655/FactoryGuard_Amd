@@ -13,7 +13,7 @@ describe("InvestigationPanel Component", () => {
     expect(html).toContain("Run AI Investigation");
   });
 
-  it("renders completed investigation report with evidence and approval", () => {
+  it("renders completed investigation report and requires a persisted incident before decisions", () => {
     const mockInvestigation: AgentInvestigationResult = {
       machineId: "CNC-07",
       severity: "critical",
@@ -39,7 +39,8 @@ describe("InvestigationPanel Component", () => {
     expect(html).toContain("Possible spindle bearing degradation");
     expect(html).toContain("92%");
     expect(html).toContain("Temperature reached 91.4°C");
-    expect(html).toContain("MANDATORY (YES)");
-    expect(html).toContain("APPROVE ACTION");
+    expect(html).toContain("HUMAN APPROVAL REQUIRED");
+    expect(html).toContain("Run the investigation to create an incident record before making an approval decision.");
+    expect(html).not.toContain("APPROVE ACTION");
   });
 });
