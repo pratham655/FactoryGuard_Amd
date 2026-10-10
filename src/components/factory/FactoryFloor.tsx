@@ -10,6 +10,7 @@ import {
 import { ProductionLine } from "@/components/factory/ProductionLine";
 import { MachineCard } from "@/components/factory/MachineCard";
 import type { Machine } from "@/lib/factory-data";
+import { SimulationControlPanel } from "@/components/factory/SimulationControlPanel";
 
 interface FactoryFloorProps {
   machines: Machine[];
@@ -56,6 +57,7 @@ export function FactoryFloor({ machines }: FactoryFloorProps) {
 
   return (
     <section id="machines-floor" className="space-y-6">
+      <SimulationControlPanel machines={machines} />
       {/* Floor Controls & Section Title */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-800">
         <div>
