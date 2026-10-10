@@ -167,7 +167,7 @@ export function ApprovalPanel({
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-mono font-bold uppercase bg-slate-800 text-slate-300 border border-slate-700">
-              OPTIONAL (NO)
+              POLICY OPTIONAL
             </span>
           )}
         </div>
@@ -181,11 +181,11 @@ export function ApprovalPanel({
 
               <div>
                 <p className="font-bold">
-                  OPERATOR DECISION REQUIRED
+                  OPERATOR REVIEW PENDING
                 </p>
 
                 <p className="text-slate-300 mt-0.5">
-                  Decision is sent to the incident API. Clerk verifies the signed-in identity and server-side role before the decision is recorded.
+                  This incident is awaiting an operator decision. Clerk verifies the signed-in identity and server-side role before recording it. Pending review does not by itself mean safety policy mandates approval.
                 </p>
               </div>
             </div>
