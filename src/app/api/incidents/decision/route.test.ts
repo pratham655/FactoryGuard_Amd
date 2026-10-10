@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { POST } from "./route";
 import { addIncident } from "@/lib/incident-store";
 
