@@ -15,7 +15,7 @@ import type { AgentInvestigationResult } from "@/lib/ai-agent";
 
 type IncidentStatus = "detected" | "investigating" | "recommended" | "awaiting_approval" | "approved" | "rejected" | "maintenance" | "recovered" | "closed";
 
-interface SavedIncident {
+interface SavedIncident extends Pick<AgentInvestigationResult, "severity" | "probableCause" | "recommendedAction" | "requiresHumanApproval"> {
   id: string;
   status: IncidentStatus;
   approvedBy: string | null;
