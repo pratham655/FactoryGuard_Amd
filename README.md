@@ -6,7 +6,7 @@ FactoryGuard is an AI-assisted industrial incident-response dashboard for a simu
 
 - Node.js compatible with the installed Next.js version
 - npm
-- Optional: a Supabase project for durable incident storage
+- Optional: MongoDB Atlas for durable incident storage
 - Optional: a reachable OpenAI-compatible vLLM endpoint
 
 ## Run locally
@@ -23,19 +23,20 @@ On Windows PowerShell, use `Copy-Item .env.example .env.local` instead of `cp`. 
 
 - `VLLM_BASE_URL`: optional OpenAI-compatible vLLM API base URL
 - `VLLM_MODEL`: model name exposed by that endpoint
-- `SUPABASE_URL`: Supabase project URL
-- `SUPABASE_SERVICE_ROLE_KEY`: server-only Supabase service-role key
+- `MONGODB_URI`: server-only MongoDB connection string
+- `MONGODB_DB`: database name (defaults to `factoryguard`)
 
-Keep `SUPABASE_SERVICE_ROLE_KEY` private. Never expose it in client code or commit real credentials. Configure both Supabase variables to enable database-backed incident records. If they are absent, the app uses a process-local in-memory fallback for development/tests; that fallback is not durable and must not be treated as production persistence.
+Keep `MONGODB_URI` private. Never expose it in client code or commit real credentials. When `MONGODB_URI` is configured, incidents are stored in the MongoDB database named by `MONGODB_DB`. If it is absent, the app uses a process-local in-memory fallback for development/tests; that fallback is not durable and must not be treated as production persistence.
 
 ## Enable durable incident storage
 
-1. In the Supabase SQL Editor, run `supabase/migrations/202610100001_factoryguard_incidents.sql`.
-2. Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in the server environment.
-3. Restart the development server and run an investigation.
-4. Confirm the created record appears in the `factoryguard_incidents` table and that a decision updates its status and audit fields.
+1. Create a free MongoDB Atlas cluster and a database user.
+2. Configure Network Access so your development environment can reach the cluster.
+3. Put `MONGODB_URI` and `MONGODB_DB=factoryguard` in the root `.env.local` file.
+4. Restart the development server and run an investigation.
+5. Confirm the record appears in the `factoryguard` database's `incidents` collection and that an approval/rejection updates its status and history.
 
-The service-role key bypasses Row Level Security, so access must remain server-side. The current operator field records a supplied name or staff ID; it does not authenticate the operator. Add real authentication/authorization before production use.
+The MongoDB driver connects from server-side code only. The current operator field records a supplied name or staff ID; it does not authenticate the operator. Add real authentication/authorization before production use.
 
 ## Verification
 
@@ -47,7 +48,7 @@ npm run build
 
 ## Incident workflow
 
-Investigation creates an incident with a status history. The approval API validates the decision, requires an operator identity, requires a reason for rejection, and rejects decisions that are no longer awaiting approval. Database-backed decision writes use a status-filtered update to prevent competing decisions from both succeeding.
+Investigation creates an incident with a status history. The approval API validates the decision, requires an operator identity, requires a reason for rejection, and rejects decisions that are no longer awaiting approval. MongoDB decision writes use a status-filtered update to prevent competing decisions from both succeeding.
 
 ## Current limitations
 
