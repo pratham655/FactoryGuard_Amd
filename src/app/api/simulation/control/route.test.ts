@@ -1,5 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("@/lib/api-auth", () => ({
+  requireFactoryGuardRole: vi.fn().mockResolvedValue({
+    authorized: true,
+    identity: { userId: "test-user", operator: "Test Operator", role: "employee" },
+  }),
+}));
+
 import { POST } from "./route";
 import { resetSimulation } from "@/lib/simulation-store";
 
