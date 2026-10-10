@@ -12,6 +12,7 @@ import { StatusIndicator } from "@/components/factory/StatusIndicator";
 import type { FactorySummary } from "@/lib/factory-summary";
 import { detectIncident } from "@/lib/incident-detector";
 import type { SimulationState } from "@/lib/simulation-engine";
+import { getFactoryMachines } from "@/lib/factory-data";
 
 interface FactoryHeaderProps {
   summary: FactorySummary;
@@ -32,11 +33,12 @@ export function FactoryHeader({ summary }: FactoryHeaderProps) {
         if (!response.ok) return;
         const payload = (await response.json()) as SimulationResponse;
         const machines = Object.entries(payload.simulation.machines);
+        const baselineMachines = getFactoryMachines();
         let normalMachines = 0;
         let warningMachines = 0;
         let criticalMachines = 0;
         for (const [machineId, live] of machines) {
-          const baseline = (await import("@/lib/factory-data")).getFactoryMachines().find((machine) => machine.id === machineId);
+          const baseline = baselineMachines.find((machine) => machine.id === machineId);
           if (!baseline) continue;
           const severity = detectIncident({
             ...baseline.telemetry,
