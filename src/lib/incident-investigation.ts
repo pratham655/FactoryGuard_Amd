@@ -1,6 +1,6 @@
 
 import { getFactoryMachines } from "./factory-data";
-import type { IncidentSeverity } from "./incident-detector";
+import { detectIncident, type IncidentSeverity, type MachineTelemetry } from "./incident-detector";
 import { getMaintenanceHistory } from "./maintenance-history";
 import { retrieveEvidence } from "./evidence-retriever";
 
@@ -16,6 +16,7 @@ export type IncidentInvestigation = {
 
 export function investigateIncident(
   machineId: string,
+  telemetryOverride?: MachineTelemetry,
 ): IncidentInvestigation {
   const machine = getFactoryMachines().find(
     (item) => item.id === machineId,
@@ -25,7 +26,8 @@ export function investigateIncident(
     throw new Error(`Machine ${machineId} not found`);
   }
 
-  const { telemetry, status } = machine;
+  const telemetry = telemetryOverride ?? machine.telemetry;
+  const status = detectIncident(telemetry).severity;
 
   const maintenanceHistory = getMaintenanceHistory(machineId);
 
