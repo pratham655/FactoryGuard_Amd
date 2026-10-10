@@ -51,7 +51,6 @@ export function MachineWorkspace({
         // Keep the last known telemetry during transient network failures.
       }
     };
-    void refresh();
     const timer = window.setInterval(() => void refresh(), 1500);
     return () => {
       active = false;
