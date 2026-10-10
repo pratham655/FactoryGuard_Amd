@@ -65,6 +65,21 @@ describe("incident lifecycle", () => {
     ).toThrow();
   });
 
+  it("requires approval for critical incidents even when the input flag is false", () => {
+    const criticalWithoutFlag = createIncidentRecord({
+      ...criticalIncident,
+      requiresHumanApproval: false,
+    });
+
+    let incident = transitionIncident(criticalWithoutFlag, "investigating");
+    incident = transitionIncident(incident, "recommended");
+
+    expect(incident.requiresHumanApproval).toBe(false);
+    expect(() => transitionIncident(incident, "maintenance)).toThrow(
+      "Human approval is required before maintenance",
+    );
+  });
+
   it("records explicit human approval before maintenance", () => {
     let incident = createIncidentRecord(criticalIncident);
 
