@@ -532,7 +532,7 @@ export function InvestigationPanel({
                   savedIncident?.rejectionReason
                 }
                 initialUpdatedAt={savedIncident?.updatedAt}
-                onIncidentUpdated={(incident) => setSavedIncident(incident)}
+                onIncidentUpdated={(incident) => setSavedIncident((current) => current ? { ...current, ...incident } : current)}
               />
             ) : (
               <p className="rounded-lg border border-amber-500/30 bg-amber-950/20 p-3 font-mono text-xs text-amber-200">
