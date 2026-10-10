@@ -48,16 +48,16 @@ export function GovernancePanel({ machine }: GovernancePanelProps) {
           </div>
           <div>
             <h3 className="font-mono text-sm font-bold uppercase tracking-wider text-white">
-              System Governance, Safety & Compliance Audit
+              Governance & Safety Checklist (Demo)
             </h3>
             <p className="text-xs text-slate-400">
-              Regulatory compliance, safety interlocks, and AI decision traceability for {machine.id}.
+              Illustrative checklist for {machine.id}; these entries are demo data, not verified certifications or an immutable audit log.
             </p>
           </div>
         </div>
 
         <span className="text-xs font-mono px-2.5 py-1 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold">
-          AUDIT TRAIL IMMUTABLE
+          DEMO GOVERNANCE VIEW
         </span>
       </div>
 
