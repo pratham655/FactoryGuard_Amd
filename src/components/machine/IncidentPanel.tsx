@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import {
   AlertOctagon,
   AlertTriangle,
@@ -12,9 +14,50 @@ interface IncidentPanelProps {
   onInvestigateClick?: () => void;
 }
 
+interface SavedIncidentSummary {
+  id: string;
+  machineId: string;
+  severity: string;
+  probableCause: string;
+  recommendedAction: string;
+  status: string;
+  approvedBy?: string | null;
+  rejectedBy?: string | null;
+  rejectionReason?: string | null;
+  updatedAt?: string;
+}
+
+interface IncidentApiResponse {
+  incident?: SavedIncidentSummary | null;
+  error?: string;
+}
+
 export function IncidentPanel({ machine, onInvestigateClick }: IncidentPanelProps) {
   const isCritical = machine.status === "critical";
   const isWarning = machine.status === "warning";
+  const [savedIncident, setSavedIncident] = useState<SavedIncidentSummary | null>(null);
+  const [incidentLoadError, setIncidentLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadLatestIncident() {
+      try {
+        const response = await fetch("/api/incidents/by-machine/" + encodeURIComponent(machine.id), {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const data = (await response.json().catch(() => ({}))) as IncidentApiResponse;
+        if (!response.ok) throw new Error(data.error ?? "Unable to load saved incident.");
+        setSavedIncident(data.incident ?? null);
+        setIncidentLoadError(null);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setIncidentLoadError(error instanceof Error ? error.message : "Unable to load saved incident.");
+      }
+    }
+    void loadLatestIncident();
+    return () => controller.abort();
+  }, [machine.id]);
 
   return (
     <div
@@ -68,6 +111,30 @@ export function IncidentPanel({ machine, onInvestigateClick }: IncidentPanelProp
           {machine.status.toUpperCase()} INCIDENT STATUS
         </span>
       </div>
+
+      {incidentLoadError && (
+        <p role="status" className="rounded-lg border border-amber-500/30 bg-amber-950/20 p-3 font-mono text-xs text-amber-200">
+          Saved incident history could not be loaded: {incidentLoadError}
+        </p>
+      )}
+
+      {savedIncident && (
+        <div className="space-y-2 rounded-lg border border-slate-700 bg-slate-950/70 p-4 font-mono text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-bold text-slate-200">LATEST SAVED INCIDENT</span>
+            <span className={"rounded border px-2 py-1 " + (savedIncident.status === "closed" || savedIncident.status === "recovered" ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : savedIncident.status === "rejected" ? "border-red-500/30 bg-red-500/10 text-red-300" : "border-amber-500/30 bg-amber-500/10 text-amber-300")}>
+              {savedIncident.status.replace(/_/g, " ").toUpperCase()}
+            </span>
+          </div>
+          <p className="break-all text-slate-500">Incident ID: {savedIncident.id}</p>
+          <p className="text-white">{savedIncident.probableCause}</p>
+          <p className="text-slate-300">Recommended action: {savedIncident.recommendedAction}</p>
+          {savedIncident.approvedBy && <p className="text-emerald-300">Approved by: {savedIncident.approvedBy}</p>}
+          {savedIncident.rejectedBy && <p className="text-red-300">Rejected by: {savedIncident.rejectedBy}</p>}
+          {savedIncident.rejectionReason && <p className="text-slate-300">Rejection reason: {savedIncident.rejectionReason}</p>}
+          {savedIncident.updatedAt && <p className="text-slate-500">Updated: {new Date(savedIncident.updatedAt).toLocaleString()}</p>}
+        </div>
+      )}
 
       {isCritical || isWarning ? (
         <div className="space-y-4 font-mono text-xs">
