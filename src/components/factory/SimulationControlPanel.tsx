@@ -34,7 +34,6 @@ export function SimulationControlPanel({ machines }: { machines: Machine[] }) {
   }, []);
 
   useEffect(() => {
-    void refresh();
     const timer = window.setInterval(() => void refresh(), 1500);
     return () => window.clearInterval(timer);
   }, [refresh]);
