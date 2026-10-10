@@ -29,7 +29,6 @@ async function incidentCollection(): Promise<Collection<IncidentRecord> | null> 
   const client =
     globalStore.__factoryGuardMongoClient ??
     (globalStore.__factoryGuardMongoClient = new MongoClient(config.uri));
-  if (!client.connect) throw new Error("Unable to initialize MongoDB client");
   await client.connect();
   return client.db(config.database).collection<IncidentRecord>("incidents");
 }
