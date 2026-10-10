@@ -210,4 +210,36 @@ describe("POST /api/simulation/control", () => {
 
     expect(response.status).toBe(400);
   });
+
+  it.each([
+    ["thermal-overload", "temperature"],
+    ["cooling-failure", "temperature"],
+    ["vibration-anomaly", "vibration"],
+    ["spindle-degradation", "vibration"],
+    ["lubrication-issue", "vibration"],
+    ["motor-overload", "motorCurrent"],
+  ] as const)("exposes %s telemetry through the control API", async (scenario, channel) => {
+    resetSimulation();
+
+    const beforeResponse = await POST(new Request("http://localhost/api/simulation/control", {
+      method: "POST",
+      body: JSON.stringify({ action: "reset" }),
+    }));
+    const beforeBody = await beforeResponse.json();
+    const targetBefore = beforeBody.simulation.machines["CNC-03"][channel];
+    const otherBefore = beforeBody.simulation.machines["CNC-01"];
+
+    const response = await POST(new Request("http://localhost/api/simulation/control", {
+      method: "POST",
+      body: JSON.stringify({ action: "scenario", machineId: "CNC-03", scenario }),
+    }));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.simulation.machines["CNC-03"].scenario).toBe(scenario);
+    expect(body.simulation.machines["CNC-03"][channel]).toBeGreaterThan(targetBefore);
+    expect(body.simulation.machines["CNC-03"].operatingState).toBe("degraded");
+    expect(body.simulation.machines["CNC-01"]).toEqual(otherBefore);
+  });
+
 });
