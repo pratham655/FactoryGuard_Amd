@@ -1,3 +1,4 @@
+import dns from "node:dns";
 import { MongoClient, type Collection } from "mongodb";
 import {
   createIncidentRecord,
@@ -16,6 +17,12 @@ const store = (globalStore.__factoryGuardIncidents ??= { records: new Map() });
 function mongoConfig(): { uri: string; database: string } | null {
   const uri = process.env.MONGODB_URI?.trim();
   if (!uri) return null;
+
+  // Optional workaround for networks whose default DNS resolver refuses SRV lookups.
+  // Set MONGODB_DNS_SERVERS=8.8.8.8 in .env.local only if the default resolver fails.
+  const dnsServers = process.env.MONGODB_DNS_SERVERS?.split(",").map((server) => server.trim()).filter(Boolean);
+  if (dnsServers?.length) dns.setServers(dnsServers);
+
   return {
     uri,
     database: process.env.MONGODB_DB?.trim() || "factoryguard",
