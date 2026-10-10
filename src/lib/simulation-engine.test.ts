@@ -69,4 +69,34 @@ describe("simulation-engine", () => {
     expect(nextState.machines["CNC-02"].scenario).toBe("thermal-overload");
   });
 
+  it.each([
+    ["thermal-overload", "temperature"],
+    ["cooling-failure", "temperature"],
+    ["vibration-anomaly", "vibration"],
+    ["spindle-degradation", "vibration"],
+    ["lubrication-issue", "vibration"],
+    ["motor-overload", "motorCurrent"],
+  ] as const)("injects %s into its corresponding telemetry channel", (scenario, channel) => {
+    const initialState = createSimulationState();
+    const machineId = "CNC-03";
+    const before = initialState.machines[machineId];
+    const nextState = injectScenario(initialState, machineId, scenario);
+    const after = nextState.machines[machineId];
+
+    expect(after.scenario).toBe(scenario);
+    expect(after[channel]).toBeGreaterThan(before[channel]);
+    expect(after.operatingState).toBe("degraded");
+    expect(nextState.machines["CNC-01"]).toEqual(initialState.machines["CNC-01"]);
+  });
+
+  it("does not mutate the input state when advancing an injected fault", () => {
+    const initialState = injectScenario(createSimulationState(), "CNC-03", "thermal-overload");
+    const originalTemperature = initialState.machines["CNC-03"].temperature;
+    const nextState = advanceSimulation(initialState);
+
+    expect(initialState.machines["CNC-03"].temperature).toBe(originalTemperature);
+    expect(nextState.machines["CNC-03"].temperature).toBeGreaterThan(originalTemperature);
+    expect(nextState.machines["CNC-03"].scenario).toBe("thermal-overload");
+  });
+
 });
