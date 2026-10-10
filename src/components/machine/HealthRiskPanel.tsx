@@ -54,7 +54,7 @@ export function HealthRiskPanel({ machine }: HealthRiskPanelProps) {
               Component Health & Failure Risk Projections
             </h3>
             <p className="text-xs text-slate-400">
-              Predictive RUL (Remaining Useful Life) and subsystem stress indicators for {machine.id}.
+              Telemetry-based heuristic risk indicators for {machine.id}; these are estimates, not validated failure probabilities or RUL predictions.
             </p>
           </div>
         </div>
@@ -62,7 +62,7 @@ export function HealthRiskPanel({ machine }: HealthRiskPanelProps) {
         <div className="flex items-center gap-2 font-mono text-xs">
           <span className="text-slate-400">PREDICTIVE MODEL:</span>
           <span className="px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold">
-            ROCm-WEAR-v2
+            RULE-BASED ESTIMATE
           </span>
         </div>
       </div>
