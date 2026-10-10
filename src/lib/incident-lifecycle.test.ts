@@ -75,9 +75,9 @@ describe("incident lifecycle", () => {
     incident = transitionIncident(incident, "recommended");
 
     expect(incident.requiresHumanApproval).toBe(false);
-    expect(() => transitionIncident(incident, "maintenance").toThrow(
-      "Human approval is required before maintenance",
-    );
+    expect(() =>
+      transitionIncident(incident, "maintenance"),
+    ).toThrow("Human approval is required before maintenance");
   });
 
   it("records explicit human approval before maintenance", () => {
