@@ -19,6 +19,7 @@ export function TechnicalKnowledgePanel({
   initialQuery = "",
 }: TechnicalKnowledgePanelProps) {
   const [query, setQuery] = useState(initialQuery);
+  const [selectedDocument, setSelectedDocument] = useState<{ title: string; content: string; source: string } | null>(null);
 
   // Search through domain knowledge
   const results = query.trim()
@@ -63,6 +64,13 @@ export function TechnicalKnowledgePanel({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {results.length === 0 && (
+          <div className="md:col-span-2 rounded-lg border border-slate-800 bg-slate-950/60 p-8 text-center font-mono">
+            <Search className="mx-auto mb-2 h-6 w-6 text-slate-500" />
+            <p className="text-sm font-semibold text-slate-200">No matching references</p>
+            <p className="mt-1 text-xs text-slate-400">Try an error code, spindle, temperature, vibration, or maintenance.</p>
+          </div>
+        )}
         {results.map((item, idx) => (
           <div
             key={idx}
@@ -86,14 +94,55 @@ export function TechnicalKnowledgePanel({
 
             <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
               <span>SOURCE: {item.source}</span>
-              <span className="text-cyan-400 flex items-center gap-1 hover:underline cursor-pointer">
-                View Manual
+              <button
+                type="button"
+                onClick={() => setSelectedDocument(item)}
+                className="inline-flex items-center gap-1 text-cyan-400 hover:text-cyan-300 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-400"
+                aria-label={"View details for " + item.title}
+              >
+                View Reference
                 <ExternalLink className="w-3 h-3" />
-              </span>
+              </button>
             </div>
           </div>
         ))}
       </div>
+
+      {selectedDocument && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setSelectedDocument(null);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="technical-reference-title"
+            className="w-full max-w-2xl space-y-4 rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-2xl"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-400">Technical reference</p>
+                <h4 id="technical-reference-title" className="mt-1 text-lg font-bold text-white">{selectedDocument.title}</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDocument(null)}
+                className="rounded border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800"
+              >
+                Close
+              </button>
+            </div>
+            <p className="text-sm leading-relaxed text-slate-200">{selectedDocument.content}</p>
+            <div className="border-t border-slate-800 pt-3 text-xs text-slate-400">
+              Reference source: <span className="font-semibold text-slate-200">{selectedDocument.source}</span>
+            </div>
+            <p className="text-[11px] text-amber-300">This is an in-app technical reference summary, not an external OEM manual.</p>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
