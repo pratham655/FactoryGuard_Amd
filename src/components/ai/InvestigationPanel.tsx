@@ -175,8 +175,9 @@ export function InvestigationPanel({
   // awaiting_approval. Reflect that persisted state in the report so the
   // summary and the decision panel cannot disagree.
   const approvalRequired =
-    investigation?.requiresHumanApproval === true ||
+    savedIncident?.requiresHumanApproval === true ||
     savedIncident?.severity === "critical" ||
+    investigation?.requiresHumanApproval === true ||
     savedIncident?.status === "awaiting_approval";
 
   return (
