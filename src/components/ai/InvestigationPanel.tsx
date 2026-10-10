@@ -379,7 +379,7 @@ export function InvestigationPanel({
             </div>
             <ApprovalPanel
               key={incidentId}
-              requiresHumanApproval={savedIncident.requiresHumanApproval}
+              requiresHumanApproval={approvalRequired}
               recommendedAction={savedIncident.recommendedAction}
               machineId={machineId}
               incidentId={incidentId}
