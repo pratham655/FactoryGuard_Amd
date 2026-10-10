@@ -259,7 +259,7 @@ export function ApprovalPanel({
         <div className="rounded-lg border border-emerald-500/40 bg-emerald-950/20 p-4 space-y-3 font-mono text-xs">
           <div className="flex items-center gap-2 text-emerald-400 font-bold">
             <CheckCircle2 className="w-4 h-4" />
-            <span>{status === "maintenance" ? "MAINTENANCE IN PROGRESS" : status === "recovered" ? "MACHINE RECOVERED" : status === "closed" && initialRejectedBy ? "INCIDENT CLOSED AFTER REJECTION" : status === "closed" ? "INCIDENT CLOSED" : "RECOMMENDATION APPROVED"}</span>
+            <span>{status === "maintenance" ? "MAINTENANCE IN PROGRESS" : status === "recovered" ? "MACHINE RECOVERED" : status === "closed" && (initialRejectedBy || reason.trim() || initialRejectionReason) ? "INCIDENT CLOSED AFTER REJECTION" : status === "closed" ? "INCIDENT CLOSED" : "RECOMMENDATION APPROVED"}</span>
           </div>
 
           <p className="text-slate-300">
