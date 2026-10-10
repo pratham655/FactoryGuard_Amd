@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   BookOpen,
@@ -23,6 +23,8 @@ import { TechnicalKnowledgePanel } from "@/components/machine/TechnicalKnowledge
 import { GovernancePanel } from "@/components/machine/GovernancePanel";
 import { InvestigationPanel } from "@/components/ai/InvestigationPanel";
 import type { Machine } from "@/lib/factory-data";
+import { detectIncident } from "@/lib/incident-detector";
+import type { SimulationState } from "@/lib/simulation-engine";
 import type { MaintenanceRecord } from "@/lib/maintenance-history";
 
 interface MachineWorkspaceProps {
@@ -35,6 +37,40 @@ export function MachineWorkspace({
   maintenanceHistory,
 }: MachineWorkspaceProps) {
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const [simulation, setSimulation] = useState<SimulationState | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const refresh = async () => {
+      try {
+        const response = await fetch("/api/simulation/state", { cache: "no-store" });
+        if (!response.ok) return;
+        const payload = (await response.json()) as { simulation: SimulationState; running: boolean };
+        if (active) setSimulation(payload.simulation);
+      } catch {
+        // Keep the last known telemetry during transient network failures.
+      }
+    };
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 1500);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  const liveMachine = useMemo(() => {
+    const live = simulation?.machines[machine.id];
+    if (!live) return machine;
+    const telemetry = {
+      ...machine.telemetry,
+      temperature: live.temperature,
+      vibration: live.vibration,
+      motorCurrent: live.motorCurrent,
+      errorCode: live.scenario === null ? machine.telemetry.errorCode : "SIM-FAULT",
+    };
+    return { ...machine, telemetry, status: detectIncident(telemetry).severity };
+  }, [machine, simulation]);
 
   const tabs = [
     { id: "overview", label: "1. OVERVIEW", icon: Cpu },
@@ -65,12 +101,12 @@ export function MachineWorkspace({
     <div className="space-y-6">
       {/* Workspace Header */}
       <MachineHeader
-        machine={machine}
+        machine={liveMachine}
         onInvestigateClick={handleInvestigateJump}
       />
 
       {/* Top 6 KPI Metric Cards */}
-      <MachineMetrics machine={machine} />
+      <MachineMetrics machine={liveMachine} />
 
       {/* Diagnostic Tab Navigation Bar */}
       <div className="border-b border-slate-800 bg-slate-950/70 rounded-xl p-1.5 overflow-x-auto flex items-center gap-1.5 no-scrollbar">
@@ -117,11 +153,11 @@ export function MachineWorkspace({
             {/* Telemetry & Incidents side-by-side or stacked */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <TelemetryPanel
-                telemetry={machine.telemetry}
+                telemetry={liveMachine.telemetry}
                 machineId={machine.id}
               />
               <IncidentPanel
-                machine={machine}
+                machine={liveMachine}
                 onInvestigateClick={handleInvestigateJump}
               />
             </div>
@@ -133,7 +169,7 @@ export function MachineWorkspace({
             />
 
             {/* Component Health & Risk */}
-            <HealthRiskPanel machine={machine} />
+            <HealthRiskPanel machine={liveMachine} />
 
             {/* Technical Knowledge Base */}
             <TechnicalKnowledgePanel machineId={machine.id} />
@@ -142,14 +178,14 @@ export function MachineWorkspace({
 
         {activeTab === "telemetry" && (
           <TelemetryPanel
-            telemetry={machine.telemetry}
+            telemetry={liveMachine.telemetry}
             machineId={machine.id}
           />
         )}
 
-        {activeTab === "production" && <ProductionPanel machine={machine} />}
+        {activeTab === "production" && <ProductionPanel machine={liveMachine} />}
 
-        {activeTab === "health-risk" && <HealthRiskPanel machine={machine} />}
+        {activeTab === "health-risk" && <HealthRiskPanel machine={liveMachine} />}
 
         {activeTab === "maintenance" && (
           <MaintenanceTimeline
@@ -160,7 +196,7 @@ export function MachineWorkspace({
 
         {activeTab === "incidents" && (
           <IncidentPanel
-            machine={machine}
+            machine={liveMachine}
             onInvestigateClick={handleInvestigateJump}
           />
         )}
@@ -173,7 +209,7 @@ export function MachineWorkspace({
           <TechnicalKnowledgePanel machineId={machine.id} />
         )}
 
-        {activeTab === "governance" && <GovernancePanel machine={machine} />}
+        {activeTab === "governance" && <GovernancePanel machine={liveMachine} />}
       </div>
     </div>
   );
