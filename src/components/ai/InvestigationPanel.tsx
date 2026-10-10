@@ -171,6 +171,14 @@ export function InvestigationPanel({
         ? "border-red-500/40 bg-red-950/30 text-red-300"
         : "border-amber-500/40 bg-amber-950/30 text-amber-300";
 
+  // The current incident workflow places every newly created incident in
+  // awaiting_approval. Reflect that persisted state in the report so the
+  // summary and the decision panel cannot disagree.
+  const approvalRequired =
+    investigation?.requiresHumanApproval === true ||
+    savedIncident?.severity === "critical" ||
+    savedIncident?.status === "awaiting_approval";
+
   return (
     <section
       id="ai-investigation"
@@ -453,12 +461,12 @@ export function InvestigationPanel({
 
                 <span
                   className={`mt-1 block text-base font-bold uppercase ${
-                    investigation.requiresHumanApproval
+                    approvalRequired
                       ? "text-amber-400"
                       : "text-emerald-400"
                   }`}
                 >
-                  {investigation.requiresHumanApproval
+                  {approvalRequired
                     ? "Yes (Mandatory)"
                     : "No"}
                 </span>
@@ -517,9 +525,7 @@ export function InvestigationPanel({
             {incidentId ? (
               <ApprovalPanel
                 key={incidentId}
-                requiresHumanApproval={
-                  investigation.requiresHumanApproval
-                }
+                requiresHumanApproval={approvalRequired}
                 recommendedAction={investigation.recommendedAction}
                 machineId={machineId}
                 incidentId={incidentId}
