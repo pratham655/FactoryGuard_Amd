@@ -102,6 +102,31 @@ describe("POST /api/incidents/decision", () => {
     expect(second.status).toBe(409);
   });
 
+  it("allows only one of two concurrent decisions to win", async () => {
+    const incident = await makeIncident();
+    const makeRequest = (decision: "approve" | "reject") =>
+      POST(new Request("http://localhost/api/incidents/decision", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          incidentId: incident.id,
+          decision,
+          reason: decision === "reject" ? "Second inspection required" : undefined,
+        }),
+      }));
+
+    const responses = await Promise.all([
+      makeRequest("approve"),
+      makeRequest("reject"),
+    ]);
+
+    expect(responses.map((response) => response.status).sort()).toEqual([200, 409]);
+    const winningResponse = responses.find((response) => response.status === 200);
+    expect(winningResponse).toBeDefined();
+    const body = await winningResponse!.json();
+    expect(["approved", "rejected"]).toContain(body.incident.status);
+  });
+
   it("returns 404 for an unknown incident", async () => {
     const response = await POST(new Request("http://localhost/api/incidents/decision", {
       method: "POST",
