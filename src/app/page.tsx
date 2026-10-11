@@ -1,6 +1,4 @@
 import React from "react";
-import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
 import { getFactoryMachines } from "@/lib/factory-data";
 import { getFactorySummary } from "@/lib/factory-summary";
 import { FactorySidebar } from "@/components/layout/FactorySidebar";
@@ -8,11 +6,6 @@ import { FactoryHeader } from "@/components/layout/FactoryHeader";
 import { LiveFactoryDashboard } from "@/components/factory/LiveFactoryDashboard";
 
 export default async function Home() {
-  const { userId } = await auth();
-  if (!userId) {
-    redirect("/sign-in");
-  }
-
   const summary = getFactorySummary();
   const machines = getFactoryMachines();
 
