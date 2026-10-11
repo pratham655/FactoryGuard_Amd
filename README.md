@@ -4,8 +4,9 @@ FactoryGuard is an AI-assisted incident-response dashboard for a **simulated 10-
 
 ## Current project status
 
-- **Implemented roadmap phases:** 1–6 — safety rules, lifecycle, incident persistence, dashboard functionality, frontend/backend integration, and factory simulation.
-- **Next:** Phase 7 reliability testing, then Phase 8 deployment and release readiness.
+- **Roadmap phases 1–6:** implemented — safety rules, lifecycle, incident persistence, dashboard functionality, frontend/backend integration, and factory simulation.
+- **Phase 7 — reliability:** automated regression coverage includes lifecycle safety, authentication/role checks, concurrent approval decisions, scenario telemetry, and investigation evidence. Run the full test, lint, and production-build checks on the latest commit before release.
+- **Phase 8 — release readiness:** CI workflow, environment-variable template, and setup/deployment checklist are committed. **Deployment is not yet verified**; configure production Clerk/MongoDB settings, confirm the GitHub Actions run, deploy to a hosting provider, and complete the post-deployment smoke test.
 - **Planned separately:** AMD GPU-backed model inference and Evolus AI integration. Neither should be treated as complete until the live integration is configured and tested.
 - **Important boundary:** the machine telemetry is simulated. This project is not connected to live CNC/PLC hardware and is not an industrial control system.
 
