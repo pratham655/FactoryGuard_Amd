@@ -1,7 +1,28 @@
-import Link from "next/link";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Activity, ArrowRight, Cpu, ShieldCheck, Zap } from "lucide-react";
 
 export default function SignInPage() {
+  const router = useRouter();
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function continueAsDemo() {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/demo-session", { method: "POST" });
+      if (!response.ok) throw new Error("Unable to start demo session. Please try again.");
+      router.push("/");
+      router.refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to start demo session.");
+      setLoading(false);
+    }
+  }
+
   return (
     <main className="industrial-grid relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-12 text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(8,145,178,0.16),_transparent_55%)]" />
@@ -22,7 +43,7 @@ export default function SignInPage() {
           </p>
           <h1 className="text-2xl font-bold tracking-tight">Enter the control room</h1>
           <p className="mt-2 text-sm leading-6 text-slate-400">
-            Explore live factory simulation, AI-assisted incident investigation, and operator-approved maintenance workflows.
+            Explore factory simulation, AI-assisted incident investigation, and operator-approved maintenance workflows.
           </p>
         </div>
 
@@ -40,16 +61,20 @@ export default function SignInPage() {
           </div>
         </div>
 
-        <Link
-          href="/"
-          className="group flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-950/40 transition hover:from-cyan-500 hover:to-blue-500"
+        <button
+          type="button"
+          onClick={continueAsDemo}
+          disabled={loading}
+          className="group flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-950/40 transition hover:from-cyan-500 hover:to-blue-500 disabled:cursor-wait disabled:opacity-70"
         >
-          Continue as Demo Operator
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-        </Link>
+          {loading ? "Opening control room…" : "Continue as Demo Operator"}
+          {!loading && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
+        </button>
+
+        {error && <p role="alert" className="mt-3 text-sm text-red-400">{error}</p>}
 
         <p className="mt-5 text-center text-[11px] leading-5 text-slate-500">
-          Public demonstration only. This demo sign-in is not real authentication and must not protect production systems.
+          Public demonstration only. This demo entry is not real authentication and must not protect production systems.
         </p>
       </section>
     </main>
