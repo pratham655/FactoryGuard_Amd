@@ -1,14 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-const clerkMocks = vi.hoisted(() => ({
-  auth: vi.fn(),
-  currentUser: vi.fn(),
-}));
-
-vi.mock("@clerk/nextjs/server", () => ({
-  auth: clerkMocks.auth,
-  currentUser: clerkMocks.currentUser,
-}));
+import { beforeEach, describe, expect, it } from "vitest";
 import { POST } from "./route";
 import { addIncident } from "@/lib/incident-store";
 
@@ -22,42 +12,21 @@ async function makeIncident() {
   });
 }
 
-describe("POST /api/incidents/decision", () => {
+describe("POST /api/incidents/decision in demo mode", () => {
   beforeEach(() => {
-    clerkMocks.auth.mockResolvedValue({ userId: "user_test_123" });
-    clerkMocks.currentUser.mockResolvedValue({
-      id: "user_test_123",
-      fullName: "Factory Operator",
-      primaryEmailAddress: { emailAddress: "operator@example.com" },
-      publicMetadata: { role: "employee" },
-    });
+    // Each test creates its own incident; no identity-provider mock is needed.
   });
 
-  it("rejects unauthenticated requests", async () => {
-    clerkMocks.auth.mockResolvedValueOnce({ userId: null });
+  it("allows demo operator access without external authentication", async () => {
     const response = await POST(new Request("http://localhost/api/incidents/decision", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ incidentId: "anything", decision: "approve" }),
+      body: JSON.stringify({ incidentId: "missing-incident", decision: "approve" }),
     }));
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(404);
   });
 
-  it("rejects authenticated users without a FactoryGuard role", async () => {
-    clerkMocks.currentUser.mockResolvedValueOnce({
-      id: "user_test_123",
-      fullName: "Unknown User",
-      primaryEmailAddress: { emailAddress: "unknown@example.com" },
-      publicMetadata: {},
-    });
-    const response = await POST(new Request("http://localhost/api/incidents/decision", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ incidentId: "anything", decision: "approve" }),
-    }));
-    expect(response.status).toBe(403);
-  });
-  it("records an approval with operator identity", async () => {
+  it("records approval under the fixed demo operator identity", async () => {
     const incident = await makeIncident();
     const response = await POST(new Request("http://localhost/api/incidents/decision", {
       method: "POST",
@@ -68,7 +37,7 @@ describe("POST /api/incidents/decision", () => {
 
     expect(response.status).toBe(200);
     expect(body.incident.status).toBe("approved");
-    expect(body.incident.approvedBy).toBe("Factory Operator");
+    expect(body.incident.approvedBy).toBe("Demo Operator");
     expect(body.incident.history).toEqual(["detected", "investigating", "recommended", "awaiting_approval", "approved"]);
   });
 
@@ -77,7 +46,7 @@ describe("POST /api/incidents/decision", () => {
     const response = await POST(new Request("http://localhost/api/incidents/decision", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ incidentId: incident.id, decision: "reject", operator: "OP-104", reason: " " }),
+      body: JSON.stringify({ incidentId: incident.id, decision: "reject", reason: " " }),
     }));
 
     expect(response.status).toBe(400);
@@ -89,14 +58,14 @@ describe("POST /api/incidents/decision", () => {
     const first = await POST(new Request("http://localhost/api/incidents/decision", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ incidentId: incident.id, decision: "approve", operator: "OP-104" }),
+      body: JSON.stringify({ incidentId: incident.id, decision: "approve" }),
     }));
     expect(first.status).toBe(200);
 
     const second = await POST(new Request("http://localhost/api/incidents/decision", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ incidentId: incident.id, decision: "reject", operator: "FORGED-OPERATOR", reason: "Need more evidence" }),
+      body: JSON.stringify({ incidentId: incident.id, decision: "reject", reason: "Need more evidence" }),
     }));
 
     expect(second.status).toBe(409);
@@ -131,7 +100,7 @@ describe("POST /api/incidents/decision", () => {
     const response = await POST(new Request("http://localhost/api/incidents/decision", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ incidentId: "missing-incident", decision: "approve", operator: "FORGED-OPERATOR" }),
+      body: JSON.stringify({ incidentId: "missing-incident", decision: "approve" }),
     }));
 
     expect(response.status).toBe(404);
