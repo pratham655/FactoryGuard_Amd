@@ -86,6 +86,7 @@ describe("POST /api/incidents/[machineId]/investigate", () => {
         expect.arrayContaining([
           expect.stringContaining("77°C"),
           expect.stringContaining("E-301"),
+          expect.stringContaining("Motor current:"),
         ]),
       );
       expect(body.incident).toMatchObject({
