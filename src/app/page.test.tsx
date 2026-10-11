@@ -1,20 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
-vi.mock("@clerk/nextjs/server", () => ({
-  auth: vi.fn().mockResolvedValue({ userId: "test-user" }),
-}));
-
-vi.mock("@clerk/nextjs", () => ({
-  useUser: () => ({
-    isLoaded: true,
-    user: {
-      fullName: "Test Operator",
-      primaryEmailAddress: { emailAddress: "test@example.com" },
-    },
-  }),
-  UserButton: () => null,
-}));
 
 import Home from "./page";
 
