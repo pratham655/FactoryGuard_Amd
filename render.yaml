@@ -3,7 +3,7 @@ services:
     name: factoryguard
     runtime: node
     plan: free
-    buildCommand: npm ci && npm run build
+    buildCommand: npm install --include=optional && npm run build
     startCommand: npm run start
     healthCheckPath: /
     envVars:
