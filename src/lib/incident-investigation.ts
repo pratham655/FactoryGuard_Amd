@@ -66,6 +66,8 @@ export function investigateIncident(
   const baseEvidence = [
     `Temperature: ${telemetry.temperature}°C`,
     `Vibration: ${telemetry.vibration} mm/s`,
+    `Motor current: ${telemetry.motorCurrent} A`,
+    `Machine reported error code ${telemetry.errorCode ?? "none"}`,
   ];
 
   if (status === "critical") {
