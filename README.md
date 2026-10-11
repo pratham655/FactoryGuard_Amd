@@ -1,44 +1,99 @@
 # FactoryGuard
 
-FactoryGuard is an AI-assisted industrial incident-response dashboard for a simulated 10-machine factory. It correlates machine telemetry, presents evidence and remediation guidance, and routes high-risk actions through a human decision workflow.
+FactoryGuard is an AI-assisted incident-response dashboard for a **simulated 10-machine CNC factory**. It combines simulated telemetry, a deterministic rule-based investigation engine, evidence and recommendations, authenticated human decisions, and incident maintenance/recovery lifecycle tracking.
+
+## Current project status
+
+- **Implemented roadmap phases:** 1–6 — safety rules, lifecycle, incident persistence, dashboard functionality, frontend/backend integration, and factory simulation.
+- **Next:** Phase 7 reliability testing, then Phase 8 deployment and release readiness.
+- **Planned separately:** AMD GPU-backed model inference and Evolus AI integration. Neither should be treated as complete until the live integration is configured and tested.
+- **Important boundary:** the machine telemetry is simulated. This project is not connected to live CNC/PLC hardware and is not an industrial control system.
+
+## Technology stack
+
+- Next.js App Router, React, TypeScript and Tailwind CSS
+- Clerk authentication and Owner/Employee role authorization
+- MongoDB for durable incident records
+- Deterministic incident investigation and an optional OpenAI-compatible vLLM endpoint
+- Vitest, ESLint and the Next.js production build
 
 ## Requirements
 
-- Node.js compatible with the installed Next.js version
+- Node.js supported by the installed Next.js version (Node.js 22 LTS is a practical choice)
 - npm
-- Optional: MongoDB Atlas for durable incident storage
+- A Clerk application for authenticated app use
+- MongoDB Atlas or another supported MongoDB deployment for durable incident storage
 - Optional: a reachable OpenAI-compatible vLLM endpoint
 
 ## Run locally
 
+Install dependencies:
+
 ```bash
-npm install
+npm ci
+```
+
+Create a local environment file:
+
+**Windows PowerShell**
+```powershell
+Copy-Item .env.example .env.local
+```
+
+**macOS/Linux**
+```bash
 cp .env.example .env.local
+```
+
+Fill the required Clerk values from the Clerk dashboard in the root `.env.local` file. Configure MongoDB if you want incident records to survive server restarts. Then run:
+
+```bash
 npm run dev
 ```
 
-On Windows PowerShell, use `Copy-Item .env.example .env.local` instead of `cp`. Open http://localhost:3000.
+Open http://localhost:3000.
 
-## Environment configuration
+## Environment variables
 
-- `VLLM_BASE_URL`: optional OpenAI-compatible vLLM API base URL
-- `VLLM_MODEL`: model name exposed by that endpoint
-- `MONGODB_URI`: server-only MongoDB connection string
-- `MONGODB_DB`: database name (defaults to `factoryguard`)
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk browser/application configuration |
+| `CLERK_SECRET_KEY` | Server-side Clerk authentication; keep secret |
+| `MONGODB_URI` | Server-only MongoDB connection string |
+| `MONGODB_DB` | Database name; defaults to `factoryguard` |
+| `MONGODB_DNS_SERVERS` | Optional comma-separated DNS resolver IPs if SRV lookup fails |
+| `VLLM_BASE_URL` | Optional server-side OpenAI-compatible vLLM base URL |
+| `VLLM_MODEL` | Model name served by the configured endpoint |
 
-Keep `MONGODB_URI` private. Never expose it in client code or commit real credentials. When `MONGODB_URI` is configured, incidents are stored in the MongoDB database named by `MONGODB_DB`. If it is absent, the app uses a process-local in-memory fallback for development/tests; that fallback is not durable and must not be treated as production persistence.
+Never expose MongoDB credentials, Clerk secret keys or model endpoint credentials to browser code. Do not commit `.env.local` or real secrets. The repository ignores `.env*`; commit only the placeholder `.env.example`.
 
-## Enable durable incident storage
+## MongoDB persistence
 
-1. Create a free MongoDB Atlas cluster and a database user.
-2. Configure Network Access so your development environment can reach the cluster.
-3. Put `MONGODB_URI` and `MONGODB_DB=factoryguard` in the root `.env.local` file.
-4. Restart the development server and run an investigation.
-5. Confirm the record appears in the `factoryguard` database's `incidents` collection and that an approval/rejection updates its status and history.
+When `MONGODB_URI` is configured, incident records are stored in the database named by `MONGODB_DB` (default `factoryguard`) in the `incidents` collection. Without `MONGODB_URI`, the application uses a process-local in-memory fallback for development/tests; that fallback is not durable and is not suitable as production persistence.
 
-The MongoDB driver connects from server-side code only. The current operator field records a supplied name or staff ID; it does not authenticate the operator. Add real authentication/authorization before production use.
+To configure MongoDB Atlas:
+
+1. Create a cluster and database user.
+2. Configure network access for the environment that will run the app.
+3. Add the connection string to root `.env.local` as `MONGODB_URI` and set `MONGODB_DB=factoryguard`.
+4. Restart the app, create an investigation, and verify the record appears in the `incidents` collection.
+5. Verify that decisions and lifecycle changes update the saved status/history.
+
+If the default DNS resolver cannot resolve the Atlas SRV record, configure `MONGODB_DNS_SERVERS` with a resolver permitted by your network. Do not add this workaround unless it is needed.
+
+## Authentication and incident safety
+
+- Protected application/API routes use Clerk authentication and the FactoryGuard Owner/Employee role.
+- The server derives the operator identity from the verified Clerk user; it does not trust an operator name supplied by the browser.
+- Critical incidents require human approval before maintenance.
+- Decision and lifecycle updates use status checks to reject stale or competing transitions.
+- The deterministic rule engine remains the safety baseline. Optional model output is advisory and must not override severity, verified evidence or mandatory approval.
+
+Assign the `role` field in the user's Clerk **public metadata** to `owner` or `employee` for authorized access.
 
 ## Verification
+
+Run all three checks before merging/deploying:
 
 ```bash
 npm test
@@ -46,13 +101,50 @@ npm run lint
 npm run build
 ```
 
-## Incident workflow
+## Simulation and incident workflow
 
-Investigation creates an incident with a status history. The approval API validates the decision, requires an operator identity, requires a reason for rejection, and rejects decisions that are no longer awaiting approval. MongoDB decision writes use a status-filtered update to prevent competing decisions from both succeeding.
+The simulation supports start, pause, reset, tick advancement, and controlled scenarios: spindle degradation, thermal overload, vibration anomaly, motor overload, cooling failure and lubrication issue.
+
+Typical demo path:
+
+1. Sign in with an authorized Clerk user.
+2. Select a machine and inject a fault scenario.
+3. Run an investigation and inspect the evidence/recommendation.
+4. Review the saved incident.
+5. Approve or reject the proposed intervention as the operator.
+6. If approved, advance through maintenance, recovery and closure.
+
+Simulation state is currently process-memory based, so it may reset when the server restarts or when multiple server instances do not share memory. Incident persistence is separate and requires MongoDB configuration.
+
+## Phase 7 — reliability checklist
+
+- Exercise the complete scenario-to-closure workflow.
+- Verify unauthenticated, missing-role and authorized-user behavior.
+- Test competing approval/rejection requests and lifecycle transitions.
+- Test missing incidents, invalid payloads, database outage/error paths and simulation reset/isolation.
+- Review logs and errors for accidental secret disclosure.
+
+## Phase 8 — deployment checklist
+
+- Set Clerk, MongoDB and optional model endpoint values in the deployment platform's server-side environment settings.
+- Configure Clerk production domains and redirect URLs; verify Owner/Employee role metadata.
+- Confirm MongoDB network access and durable writes from the deployed runtime.
+- Deploy, then smoke-test sign-in, dashboard, simulation, investigation, saved incident restore, decisions and lifecycle transitions.
+- Confirm the simulation's in-memory limitations are acceptable for the demo and rehearse a fallback if model inference is unavailable.
+
+## Planned integrations (not yet complete)
+
+### AMD GPU-backed inference
+
+Confirm GPU/runtime access and supported ROCm/software versions, serve a compatible model (for example through vLLM where supported), configure the server-side endpoint, test latency and failure fallback, and document reproducible demo evidence. AMD credits or an endpoint request alone do not mean GPU inference is integrated.
+
+### Evolus AI
+
+First confirm the exact Evolus AI product, API documentation, credentials and supported workflow. Implement a server-side adapter only after its contract is known; validate schema, authentication, timeouts and outages. Preserve the deterministic safety engine and human approval rules.
 
 ## Current limitations
 
-- The local fallback is in-memory and resets with the process.
-- Operator identity is not yet verified against an authenticated account.
-- A successful test of the vLLM adapter does not prove a live model endpoint is reachable; verify live inference separately.
-- Maintenance/recovery UI and lifecycle transitions still need end-to-end completion.
+- Telemetry is simulated; no live CNC/PLC or production equipment is connected.
+- Risk/health/production estimates are demo heuristics and require plant-specific validation before any real operational use.
+- Simulation state is in memory and is not distributed or durable.
+- Live AMD GPU inference and Evolus AI integration remain planned work.
