@@ -1,4 +1,3 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 export type FactoryGuardIdentity = {
@@ -11,58 +10,20 @@ type AuthorizationResult =
   | { authorized: true; identity: FactoryGuardIdentity }
   | { authorized: false; response: NextResponse };
 
+/**
+ * Demo-only identity for the public hackathon showcase.
+ *
+ * This intentionally does not provide real authentication or authorization.
+ * Do not use this mode for production systems connected to real equipment or
+ * sensitive data. Restore a real identity provider before production use.
+ */
 export async function requireFactoryGuardRole(): Promise<AuthorizationResult> {
-  const { userId } = await auth();
-
-  if (!userId) {
-    return {
-      authorized: false,
-      response: NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 },
-      ),
-    };
-  }
-
-  const user = await currentUser();
-
-  if (!user || user.id !== userId) {
-    return {
-      authorized: false,
-      response: NextResponse.json(
-        { error: "Unable to verify signed-in user" },
-        { status: 401 },
-      ),
-    };
-  }
-
-  const role = user.publicMetadata?.role;
-
-  if (role !== "owner" && role !== "employee") {
-    // Local diagnostic: compare this identity with the user edited in Clerk.
-    // Do not log keys, tokens, or other secrets.
-    console.warn("[FactoryGuard auth] Role check failed", {
-      sessionUserId: userId,
-      currentUserId: user.id,
-      primaryEmail: user.primaryEmailAddress?.emailAddress ?? null,
-      publicMetadataRole: role ?? null,
-    });
-
-    return {
-      authorized: false,
-      response: NextResponse.json(
-        { error: "Your account has no FactoryGuard role. Ask the owner to assign owner or employee access." },
-        { status: 403 },
-      ),
-    };
-  }
-
   return {
     authorized: true,
     identity: {
-      userId,
-      operator: user.fullName?.trim() || user.primaryEmailAddress?.emailAddress || userId,
-      role,
+      userId: "demo-operator",
+      operator: "Demo Operator",
+      role: "owner",
     },
   };
 }
