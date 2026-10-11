@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { UserButton, useUser } from "@clerk/nextjs";
 import {
   AlertTriangle,
   Clock,
@@ -23,7 +22,6 @@ type SimulationResponse = { simulation: SimulationState; running: boolean };
 export function FactoryHeader({ summary }: FactoryHeaderProps) {
   const [timeStr, setTimeStr] = useState<string>("");
   const [liveSummary, setLiveSummary] = useState<FactorySummary>(summary);
-  const { isLoaded, user } = useUser();
 
   useEffect(() => {
     let active = true;
@@ -83,7 +81,6 @@ export function FactoryHeader({ summary }: FactoryHeaderProps) {
   }, []);
 
   const isAttentionRequired = liveSummary.factoryStatus === "attention-required";
-  const displayName = user?.fullName || user?.primaryEmailAddress?.emailAddress || "Signed-in operator";
 
   return (
     <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 px-6 py-4">
@@ -125,12 +122,12 @@ export function FactoryHeader({ summary }: FactoryHeaderProps) {
             <AlertTriangle className="w-3.5 h-3.5 animate-pulse text-red-400" />
             <span><strong className="text-white">{liveSummary.activeIncidents}</strong> ACTIVE {liveSummary.activeIncidents === 1 ? "INCIDENT" : "INCIDENTS"}</span>
           </Link>
-          <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/90 px-3 py-1.5">
-            <div className="min-w-0 max-w-40">
-              <p className="truncate text-[11px] text-white">{isLoaded ? displayName : "Loading account…"}</p>
-              <p className="text-[10px] uppercase tracking-wider text-cyan-400">Authenticated</p>
+          <div className="flex items-center gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/5 px-3 py-1.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-500/15 text-[11px] font-bold text-cyan-300">DO</div>
+            <div className="min-w-0">
+              <p className="truncate text-[11px] text-white">Demo Operator</p>
+              <p className="text-[10px] uppercase tracking-wider text-cyan-400">Demo Session</p>
             </div>
-            <UserButton />
           </div>
         </div>
       </div>
