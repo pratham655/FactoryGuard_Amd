@@ -19,6 +19,9 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Reconcile optional dependency lock metadata
+        run: npm install --package-lock-only --include=optional
+
       - name: Install dependencies
         run: npm ci
 
