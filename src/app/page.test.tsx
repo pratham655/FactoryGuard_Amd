@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
+vi.mock("next/headers", () => ({
+  cookies: vi.fn().mockResolvedValue({
+    get: () => ({ value: "demo" }),
+  }),
+}));
 
 import Home from "./page";
 
