@@ -1,4 +1,6 @@
 import React from "react";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { getFactoryMachines } from "@/lib/factory-data";
 import { getFactorySummary } from "@/lib/factory-summary";
 import { FactorySidebar } from "@/components/layout/FactorySidebar";
@@ -6,6 +8,11 @@ import { FactoryHeader } from "@/components/layout/FactoryHeader";
 import { LiveFactoryDashboard } from "@/components/factory/LiveFactoryDashboard";
 
 export default async function Home() {
+  const cookieStore = await cookies();
+  if (cookieStore.get("factoryguard-demo-session")?.value !== "demo") {
+    redirect("/sign-in");
+  }
+
   const summary = getFactorySummary();
   const machines = getFactoryMachines();
 
