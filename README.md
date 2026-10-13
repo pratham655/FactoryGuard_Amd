@@ -130,7 +130,7 @@ Simulation state is currently process-memory based, so it may reset when the ser
 
 ## Integration status
 
-### Evolus agent chat adapter — initial implementation on a feature branch
+### Evolus agent chat adapter — initial implementation, not yet end-to-end verified
 
 The optional server-side chat adapter is being added on `feat/evolus-agent-chat`. It uses the documented OpenAI-compatible endpoint `https://api.evolus.ai/v1/chat/completions`, a server-only Bearer API key and the Evolus model reference `<applicationId>:<agentId>`.
 
