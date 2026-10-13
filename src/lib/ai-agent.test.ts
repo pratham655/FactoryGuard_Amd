@@ -73,7 +73,7 @@ describe("investigateWithAgent", () => {
     process.env.VLLM_BASE_URL = "http://localhost:8000/";
     process.env.VLLM_MODEL = "factoryguard-model";
 
-    const fetchMock = vi.fn().mockResolvedValue(
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       Response.json({
         choices: [{
           message: {
@@ -106,7 +106,7 @@ describe("investigateWithAgent", () => {
     process.env.VLLM_BASE_URL = "http://localhost:8000";
     process.env.VLLM_MODEL = "factoryguard-model";
 
-    const fetchMock = vi.fn().mockResolvedValue(
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       Response.json({
         choices: [{
           message: {
