@@ -128,15 +128,22 @@ Simulation state is currently process-memory based, so it may reset when the ser
 - Deploy, then smoke-test sign-in, dashboard, simulation, investigation, saved incident restore, decisions and lifecycle transitions.
 - Confirm the simulation's in-memory limitations are acceptable for the demo and rehearse a fallback if model inference is unavailable.
 
-## Planned integrations (not yet complete)
+## Integration status
 
-### AMD GPU-backed inference
+### Evolus agent chat adapter — initial implementation on a feature branch
 
-Confirm GPU/runtime access and supported ROCm/software versions, serve a compatible model (for example through vLLM where supported), configure the server-side endpoint, test latency and failure fallback, and document reproducible demo evidence. AMD credits or an endpoint request alone do not mean GPU inference is integrated.
+The optional server-side chat adapter is being added on `feat/evolus-agent-chat`. It uses the documented OpenAI-compatible endpoint `https://api.evolus.ai/v1/chat/completions`, a server-only Bearer API key and the Evolus model reference `<applicationId>:<agentId>`.
 
-### Evolus AI
+Configure these server-side variables only after creating an API key and agent in the actual Evolus event workspace:
 
-First confirm the exact Evolus AI product, API documentation, credentials and supported workflow. Implement a server-side adapter only after its contract is known; validate schema, authentication, timeouts and outages. Preserve the deterministic safety engine and human approval rules.
+- `EVOLUS_API_KEY`: application API key from the Evolus workspace.
+- `EVOLUS_MODEL`: the exact `applicationId:agentId` value for the agent.
+
+This adapter is an integration slice, not proof of an end-to-end Evolus workflow. Workspace credentials, connected model, agent setup, and live requests have not been verified here. It does not by itself satisfy the partner award's requirement to use at least two Evolus building blocks. Before describing the solution as AMD-powered, configure and verify the agent's model endpoint on AMD infrastructure and preserve real runtime evidence. The deterministic investigation engine still owns severity, evidence and the human-approval gate; invalid setup, malformed answers and provider errors fall back to that engine.
+
+### AMD GPU-backed inference — not yet verified in FactoryGuard
+
+Confirm actual GPU/runtime access and supported ROCm/software versions, serve a compatible open model with vLLM on AMD infrastructure, point the server-side configuration at that endpoint, and capture repeatable evidence from the real FactoryGuard investigation request. AMD credit submission, an endpoint URL, or a generic model response alone do not prove AMD execution. The public deployed demo must not be described as AMD-inference-enabled until the live request is successfully tested end to end.
 
 ## Current limitations
 
