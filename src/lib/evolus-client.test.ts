@@ -3,7 +3,7 @@ import { createEvolusClient } from "./evolus-client";
 
 describe("createEvolusClient", () => {
   it("posts to the official OpenAI-compatible endpoint using a server-side bearer key", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       Response.json({
         choices: [{ message: { content: '{"probableCause":"Spindle wear","confidence":0.8,"recommendedAction":"Inspect the spindle."}' } }],
       }),
