@@ -13,12 +13,30 @@ declare global {
   }
 }
 
+/**
+ * Accept either a raw widget token or the full Evolus installation snippet.
+ * Extract the LAST data-token attribute so an outer pasted script cannot
+ * confuse quote parsing. Never log token contents.
+ */
 function normalizeWidgetToken(value: string): string {
   const trimmed = value.trim();
-  // Accept either the token itself or the complete installation snippet pasted
-  // into Render by mistake. Never log the token.
-  const snippetToken = trimmed.match(/data-token\s*=\s*["']([^"']+)["']/i)?.[1];
-  return (snippetToken ?? trimmed).trim();
+  if (!trimmed) return "";
+
+  const lastAttribute = trimmed.toLowerCase().lastIndexOf("data-token");
+  if (lastAttribute >= 0) {
+    const attribute = trimmed.slice(lastAttribute);
+    const match = attribute.match(/^data-token\s*=\s*["']([^"']+)["']/i);
+    if (match?.[1]) return match[1].trim();
+
+    // Handle malformed nested quotes in a pasted script snippet.
+    const looseMatch = attribute.match(/^data-token\s*=\s*["']?([^"'\s>]+)/i);
+    if (looseMatch?.[1]) return looseMatch[1].trim();
+    return "";
+  }
+
+  // Never pass an HTML/script snippet as if it were a token.
+  if (/<script\b/i.test(trimmed) || /<\/script\s*>/i.test(trimmed)) return "";
+  return trimmed;
 }
 
 /**
@@ -28,9 +46,7 @@ function normalizeWidgetToken(value: string): string {
  */
 export function EvolusWidgetLoader() {
   const configuredValue = process.env.NEXT_PUBLIC_EVOLUS_WIDGET_TOKEN;
-  const widgetToken = configuredValue
-    ? normalizeWidgetToken(configuredValue)
-    : "";
+  const widgetToken = configuredValue ? normalizeWidgetToken(configuredValue) : "";
 
   const latestContext = useRef<Record<string, string>>({
     application: "FactoryGuard Operations Control Center",
@@ -40,7 +56,10 @@ export function EvolusWidgetLoader() {
   });
 
   useEffect(() => {
-    if (!widgetToken) return;
+    if (!widgetToken) {
+      console.warn("FactoryGuard Evolus widget token is empty or malformed.");
+      return;
+    }
 
     const existingScript = document.querySelector<HTMLScriptElement>(
       'script[data-factoryguard-evolus-widget="true"]',
@@ -63,7 +82,6 @@ export function EvolusWidgetLoader() {
     script.defer = true;
     script.addEventListener("load", applyContext);
     script.addEventListener("error", () => {
-      // A failed optional chat widget must not affect factory monitoring.
       console.warn("FactoryGuard Evolus widget failed to load.");
     });
     document.body.appendChild(script);
