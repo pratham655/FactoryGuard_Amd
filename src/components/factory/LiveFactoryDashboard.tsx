@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FactoryFloor } from "@/components/factory/FactoryFloor";
 import { FactoryKPIs } from "@/components/factory/FactoryKPIs";
 import { HeroIncidentBanner } from "@/components/factory/HeroIncidentBanner";
+import { EvolusWidgetLoader } from "@/components/evolus/EvolusWidgetLoader";
 import { detectIncident } from "@/lib/incident-detector";
 import type { Machine } from "@/lib/factory-data";
 import type { FactorySummary } from "@/lib/factory-summary";
@@ -92,6 +93,7 @@ export function LiveFactoryDashboard({
 
   return (
     <>
+      <EvolusWidgetLoader />
       <FactoryKPIs summary={summary} />
       <HeroIncidentBanner criticalMachine={criticalMachine} />
       <FactoryFloor machines={machines} />
