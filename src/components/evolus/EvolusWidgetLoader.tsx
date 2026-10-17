@@ -13,13 +13,25 @@ declare global {
   }
 }
 
+function normalizeWidgetToken(value: string): string {
+  const trimmed = value.trim();
+  // Accept either the token itself or the complete installation snippet pasted
+  // into Render by mistake. Never log the token.
+  const snippetToken = trimmed.match(/data-token\s*=\s*["']([^"']+)["']/i)?.[1];
+  return (snippetToken ?? trimmed).trim();
+}
+
 /**
  * Loads the Evolus website chat only when a widget token is configured.
  * The token is public by design for this browser widget; never put server API
  * credentials here. The rule-engine investigation API remains independent.
  */
 export function EvolusWidgetLoader() {
-  const widgetToken = process.env.NEXT_PUBLIC_EVOLUS_WIDGET_TOKEN;
+  const configuredValue = process.env.NEXT_PUBLIC_EVOLUS_WIDGET_TOKEN;
+  const widgetToken = configuredValue
+    ? normalizeWidgetToken(configuredValue)
+    : "";
+
   const latestContext = useRef<Record<string, string>>({
     application: "FactoryGuard Operations Control Center",
     purpose: "Investigate simulated CNC machine incidents using the dashboard context.",
