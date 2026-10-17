@@ -16,6 +16,7 @@ type StoreState = {
 const globalStore = globalThis as typeof globalThis & {
   __factoryGuardIncidents?: StoreState;
   __factoryGuardMongoClient?: MongoClient;
+  __factoryGuardMongoUnavailable?: boolean;
 };
 
 const store = (globalStore.__factoryGuardIncidents ??= {
@@ -58,13 +59,30 @@ async function incidentCollection(): Promise<
     return null;
   }
 
+  // A broken or unreachable MongoDB URI should not make the demo's incident
+  // APIs return 500 for every request. Fall back to the process-local store
+  // when the initial connection cannot be established, and log the limitation
+  // clearly so this is not mistaken for durable persistence.
+  if (globalStore.__factoryGuardMongoUnavailable) {
+    return null;
+  }
+
   const client =
     globalStore.__factoryGuardMongoClient ??
-    (globalStore.__factoryGuardMongoClient = new MongoClient(
-      config.uri,
-    ));
+    (globalStore.__factoryGuardMongoClient = new MongoClient(config.uri, {
+      serverSelectionTimeoutMS: 5000,
+    }));
 
-  await client.connect();
+  try {
+    await client.connect();
+  } catch (error) {
+    globalStore.__factoryGuardMongoUnavailable = true;
+    console.warn(
+      "FactoryGuard: MongoDB connection failed; using in-memory incident storage for this process. Incident history will not persist across restarts.",
+      error instanceof Error ? error.message : error,
+    );
+    return null;
+  }
 
   return client
     .db(config.database)
