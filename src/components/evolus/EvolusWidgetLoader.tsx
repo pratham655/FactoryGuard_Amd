@@ -21,7 +21,6 @@ function normalizeWidgetToken(value: string): string {
     const attribute = trimmed.slice(attributeIndex);
     const match = attribute.match(/^data-token\s*=\s*["']([^"']+)["']/i);
     if (match?.[1]) return match[1].trim();
-
     const looseMatch = attribute.match(/^data-token\s*=\s*["']?([^"'\s>]+)/i);
     return looseMatch?.[1]?.trim() ?? "";
   }
@@ -35,9 +34,11 @@ export function EvolusWidgetLoader() {
   const widgetToken = configuredValue ? normalizeWidgetToken(configuredValue) : "";
   const context = useRef<Record<string, string>>({
     application: "FactoryGuard Operations Control Center",
-    purpose: "Help investigate simulated CNC machine incidents using dashboard context.",
+    purpose:
+      "Assist with simulated CNC machine incidents, evidence, telemetry and safe next steps. Rispondi sempre in italiano, salvo richiesta esplicita di un'altra lingua.",
+    language: "Italiano (it-IT). Rispondi sempre in italiano, con tono professionale e chiaro.",
     safety:
-      "Telemetry is simulated. Never claim real machine control. Critical interventions require human approval.",
+      "Telemetry is simulated. Never claim real machine control. Critical interventions require human approval. Spiega le evidenze e mantieni sempre la supervisione umana.",
   });
 
   useEffect(() => {
@@ -49,6 +50,7 @@ export function EvolusWidgetLoader() {
     const script = document.createElement("script");
     script.src = "https://api.evolus.ai/widget/v1/evolus-widget.min.js";
     script.dataset.token = widgetToken;
+    script.dataset.lang = "it";
     script.dataset.factoryguardEvolusWidget = "true";
     script.defer = true;
     script.addEventListener("load", () => {
