@@ -37,8 +37,12 @@ export function EvolusWidgetLoader() {
     purpose:
       "Assist with simulated CNC machine incidents, evidence, telemetry and safe next steps. Rispondi sempre in italiano, salvo richiesta esplicita di un'altra lingua.",
     language: "Italiano (it-IT). Rispondi sempre in italiano, con tono professionale e chiaro.",
+    incident_context:
+      "INCIDENTE SIMULATO CNC-07, DMG MORI NHX, Bay C1 / Production Line C. Telemetria disponibile: temperatura 91.4 °C (limite 80 °C); vibrazione 8.7 mm/s (limite 5.0 mm/s); corrente motore 17.8 A; pressione 4.2 bar; codice guasto E-204. Tratta questi valori come evidenze osservate. La causa non è confermata: il possibile degrado del cuscinetto del mandrino è un\u0027ipotesi da verificare, non una diagnosi certa.",
+    response_policy:
+      "Rispondi in italiano. Organizza le risposte in riepilogo, evidenze osservate, possibili cause con incertezze, azioni raccomandate e livello di confidenza. Non inventare dati mancanti; dichiara quando lo storico o ulteriori sensori non sono disponibili.",
     safety:
-      "Telemetry is simulated. Never claim real machine control. Critical interventions require human approval. Spiega le evidenze e mantieni sempre la supervisione umana.",
+      "Telemetry is simulated. Never claim real machine control. Critical interventions require human approval. Per le azioni critiche, richiedi personale qualificato e segui le procedure di sicurezza approvate dal sito.",
   });
 
   useEffect(() => {
