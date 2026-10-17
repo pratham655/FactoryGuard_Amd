@@ -1,51 +1,116 @@
-# FactoryGuard
+# FactoryGuard 🏭
+### Intelligent Industry • AI-Assisted Incident Intelligence for CNC Operations
 
-FactoryGuard is an AI-assisted incident-response dashboard for a **simulated 10-machine CNC factory**. It combines simulated telemetry, a deterministic rule-based investigation engine, evidence and recommendations, demo operator decisions, and incident maintenance/recovery lifecycle tracking.
+FactoryGuard is an interactive operations dashboard for a **simulated 10-machine CNC factory**. It brings machine telemetry, fault detection, incident investigation, maintenance recommendations, operator decisions, and incident lifecycle tracking into one workflow.
 
-## Current project status
+**Live demo:** https://factoryguard-amd.onrender.com  
+**Source code:** https://github.com/pratham655/FactoryGuard_Amd
 
-- **Roadmap phases 1–6:** implemented — safety rules, lifecycle, incident persistence, dashboard functionality, frontend/backend integration, and factory simulation.
-- **Phase 7 — reliability:** automated regression coverage includes lifecycle safety, demo operator access, concurrent approval decisions, scenario telemetry, and investigation evidence. Run the full test, lint, and production-build checks on the latest commit before release.
-- **Phase 8 — release readiness:** CI workflow, environment-variable template, and setup/deployment checklist are committed. **Deployment is not yet verified**; configure MongoDB settings, confirm the GitHub Actions run, deploy to Render, and complete the post-deployment smoke test.
-- **Planned separately:** AMD GPU-backed model inference and Evolus AI integration. Neither should be treated as complete until the live integration is configured and tested.
-- **Important boundary:** the machine telemetry is simulated. This project is not connected to live CNC/PLC hardware and is not an industrial control system.
+> **Demo and safety boundary:** All factory telemetry is simulated. FactoryGuard is a hackathon prototype, not an industrial control system. It is not connected to real CNC machines, PLCs, or plant sensors, and must not be used to control equipment or make real maintenance decisions.
+
+---
+
+## Contents
+
+- [The problem](#the-problem)
+- [What FactoryGuard does](#what-factoryguard-does)
+- [Demo walkthrough](#demo-walkthrough)
+- [How it works](#how-it-works)
+- [Technology stack](#technology-stack)
+- [Run locally](#run-locally)
+- [Environment configuration](#environment-configuration)
+- [Tests and quality checks](#tests-and-quality-checks)
+- [AI and integration status](#ai-and-integration-status)
+- [Safety, limitations, and next steps](#safety-limitations-and-next-steps)
+
+## The problem
+
+When a machine starts showing abnormal readings, an operator needs more than a red warning. They need to understand which readings triggered the incident, what the evidence supports, what remains uncertain, and what safe next step should be reviewed by a qualified person.
+
+FactoryGuard demonstrates this workflow in one place: **detect → investigate → review evidence → approve or reject → maintain → recover → close**.
+
+## What FactoryGuard does
+
+- **Factory overview:** monitor a simulated fleet of 10 CNC machines and review overall factory status.
+- **Telemetry monitoring:** inspect temperature, vibration, motor current, pressure, and fault codes where available.
+- **Fault simulation:** demonstrate scenarios such as spindle degradation, thermal overload, vibration anomaly, motor overload, cooling failure, and lubrication issues.
+- **Incident detection:** evaluate telemetry against configured rules and surface warning or critical conditions.
+- **AI-assisted chat:** an Evolus website chat widget is integrated into the deployed dashboard. The widget is configured for Italian responses and can be used to discuss simulated incidents. Actual agent output depends on the Evolus workspace configuration and availability.
+- **Evidence-based investigation:** present observed readings separately from possible causes and recommendations. The deterministic rule engine remains the fallback baseline.
+- **Human-in-the-loop decisions:** operators review proposed interventions and can approve or reject them. The AI does not directly control machinery.
+- **Incident lifecycle:** track supported transitions through maintenance, recovery, and closure.
+- **Incident persistence:** MongoDB can persist incident records when configured; local or fallback in-memory data is not durable.
+- **Responsive operations UI:** navigate factory status, machines, incidents, maintenance, investigations, technical knowledge, and governance sections.
+
+## Demo walkthrough
+
+1. Open the [live FactoryGuard demo](https://factoryguard-amd.onrender.com).
+2. Enter through the demo operator flow if prompted.
+3. Review the fleet overview and select a machine.
+4. Open an active incident or exercise a supported simulated fault.
+5. Review telemetry and run the investigation.
+6. Open the Evolus chat widget and ask a question in Italian, for example:
+
+   > Analizza l'incidente simulato CNC-07 usando tutte le telemetrie disponibili. Distingui le evidenze osservate dalle ipotesi e indica le incertezze.
+
+7. Review the recommendation and demonstrate the operator approval/rejection flow.
+8. Where available, follow the incident through maintenance, recovery, and closure.
+
+**Suggested demo evidence:** capture the fleet overview, one detailed machine/incident view, the Italian chat response, and the human-approval step. Make it clear that the telemetry and machine faults are simulated.
+
+## How it works
+
+At a high level:
+
+1. **Simulation and telemetry** provide the current state of each demo machine.
+2. **Rule-based detection** compares readings with configured thresholds and identifies an incident severity.
+3. **Investigation logic** creates a probable cause and recommended action from available evidence. Optional model integrations are advisory and can fall back to deterministic rules.
+4. **Operator review** keeps critical decisions under human control.
+5. **Incident storage and lifecycle** record supported decisions and progress when persistence is configured.
+
+The system should not present a hypothesis as a confirmed physical diagnosis. Missing readings and uncertain causes should be called out explicitly.
 
 ## Technology stack
 
-- Next.js App Router, React, TypeScript and Tailwind CSS
-- Demo-only operator entry (no external identity provider)
-- MongoDB for durable incident records
-- Deterministic incident investigation and an optional OpenAI-compatible vLLM endpoint
-- Vitest, ESLint and the Next.js production build
-
-## Requirements
-
-- Node.js supported by the installed Next.js version (Node.js 22 LTS is a practical choice)
-- npm
-- MongoDB Atlas or another supported MongoDB deployment for durable incident storage
-- Optional: a reachable OpenAI-compatible vLLM endpoint
+| Area | Technology |
+|---|---|
+| Web framework | Next.js App Router |
+| UI | React, TypeScript, Tailwind CSS v4 |
+| Icons | Lucide React |
+| Testing | Vitest |
+| Code quality/build | ESLint, Next.js production build |
+| Incident persistence | MongoDB (optional configuration) |
+| Optional inference path | OpenAI-compatible model endpoint |
+| Website chat | Evolus widget, configured for Italian |
 
 ## Run locally
 
-Install dependencies:
+### Requirements
+
+- Node.js compatible with the version in `package.json` (Node.js 22 LTS is a practical choice)
+- npm
+- Optional: MongoDB instance for persistent incident records
+- Optional: reachable OpenAI-compatible model endpoint for inference experiments
+
+### Install dependencies
 
 ```bash
 npm ci
 ```
 
-Create a local environment file:
+Create a local environment file.
 
 **Windows PowerShell**
 ```powershell
 Copy-Item .env.example .env.local
 ```
 
-**macOS/Linux**
+**macOS / Linux**
 ```bash
 cp .env.example .env.local
 ```
 
-No authentication credentials are required for the public demo. Configure MongoDB in the root `.env.local` if you want incident records to survive server restarts. Then run:
+Start the development server:
 
 ```bash
 npm run dev
@@ -53,43 +118,30 @@ npm run dev
 
 Open http://localhost:3000.
 
-## Environment variables
+## Environment configuration
+
+Set server-side values in `.env.local` for local development and in your deployment platform's environment settings for hosted deployments.
 
 | Variable | Purpose |
 |---|---|
-| `MONGODB_URI` | Server-only MongoDB connection string |
+| `MONGODB_URI` | MongoDB connection string for durable incident records |
 | `MONGODB_DB` | Database name; defaults to `factoryguard` |
-| `MONGODB_DNS_SERVERS` | Optional comma-separated DNS resolver IPs if SRV lookup fails |
-| `VLLM_BASE_URL` | Optional server-side OpenAI-compatible vLLM base URL |
-| `VLLM_MODEL` | Model name served by the configured endpoint |
+| `MONGODB_DNS_SERVERS` | Optional comma-separated DNS resolver IPs if MongoDB SRV lookup fails |
+| `VLLM_BASE_URL` | Optional base URL for a reachable OpenAI-compatible inference endpoint |
+| `VLLM_MODEL` | Optional model identifier served by that endpoint |
+| `NEXT_PUBLIC_EVOLUS_WIDGET_TOKEN` | Public website-widget token used by the browser to load Evolus chat; it is not a server-side API key |
 
-Never expose MongoDB credentials or model endpoint credentials to browser code. Do not commit `.env.local` or real secrets. The repository ignores `.env*`; commit only the placeholder `.env.example`.
+Only configure optional integrations if you have the corresponding valid credentials and endpoint. **Never commit secrets**, share API keys in screenshots, or expose server-side credentials through `NEXT_PUBLIC_*` variables. The widget token is intentionally client-visible; server API keys are not.
 
-## MongoDB persistence
+### MongoDB persistence
 
-When `MONGODB_URI` is configured, incident records are stored in the database named by `MONGODB_DB` (default `factoryguard`) in the `incidents` collection. Without `MONGODB_URI`, the application uses a process-local in-memory fallback for development/tests; that fallback is not durable and is not suitable as production persistence.
+When `MONGODB_URI` is configured, incident records use the database named by `MONGODB_DB` (default `factoryguard`) and the `incidents` collection. Without MongoDB configuration, an in-memory fallback may be used; it is not durable and may be lost when the process restarts.
 
-To configure MongoDB Atlas:
+For MongoDB Atlas, create a database user with a strong password, configure network access for the deployment host, add the connection string as a server-side environment variable, redeploy, and verify that records and status changes persist. Use the least privilege practical for the demo and understand the exposure before allowing broad network access.
 
-1. Create a cluster and database user.
-2. Configure Atlas Network Access to allow connections from the deployment host. For a public demo on a host without fixed outbound IPs, Atlas may require `0.0.0.0/0`; use a strong database password and least-privilege database user, and understand that this allows connection attempts from any IP.
-3. Add the full Atlas connection string to the host's server-side environment as `MONGODB_URI` and set `MONGODB_DB=factoryguard`.
-4. Restart/redeploy, create an investigation, and verify the record appears in the `incidents` collection.
-5. Verify that decisions and lifecycle changes update the saved status/history.
+## Tests and quality checks
 
-If the default DNS resolver cannot resolve the Atlas SRV record, configure `MONGODB_DNS_SERVERS` with a resolver permitted by your network. Do not add this workaround unless it is needed.
-
-## Authentication and incident safety
-
-- The app uses a fixed Demo Operator identity so reviewers can enter without third-party sign-in.
-- Demo mode does not provide real authentication or authorization. It is only for this simulated showcase; do not connect it to real equipment or sensitive production data.
-- Critical incidents require human approval before maintenance.
-- Decision and lifecycle updates use status checks to reject stale or competing transitions.
-- The deterministic rule engine remains the safety baseline. Optional model output is advisory and must not override severity, verified evidence or mandatory approval.
-
-## Verification
-
-Run all three checks before merging/deploying:
+Run these checks before making a release:
 
 ```bash
 npm test
@@ -97,57 +149,47 @@ npm run lint
 npm run build
 ```
 
-## Simulation and incident workflow
+For watch mode:
 
-The simulation supports start, pause, reset, tick advancement, and controlled scenarios: spindle degradation, thermal overload, vibration anomaly, motor overload, cooling failure and lubrication issue.
+```bash
+npm run test:watch
+```
 
-Typical demo path:
+A successful build or unit test does not, by itself, prove that external AI services are reachable. Test external integrations separately in the deployed environment.
 
-1. Open the FactoryGuard demo sign-in page and continue as Demo Operator.
-2. Select a machine and inject a fault scenario.
-3. Run an investigation and inspect the evidence/recommendation.
-4. Review the saved incident.
-5. Approve or reject the proposed intervention as the operator.
-6. If approved, advance through maintenance, recovery and closure.
+## AI and integration status
 
-Simulation state is currently process-memory based, so it may reset when the server restarts or when multiple server instances do not share memory. Incident persistence is separate and requires MongoDB configuration.
+### Evolus chat
 
-## Phase 7 — reliability checklist
+The website chat widget is integrated into the dashboard and configured to prefer Italian (`it`). Its replies depend on the agent, model, and widget configuration in the Evolus workspace. The chat widget is a separate integration from the dashboard's incident-investigation API.
 
-- Exercise the complete scenario-to-closure workflow.
-- Verify demo entry, input validation, competing decisions and lifecycle transitions.
-- Test competing approval/rejection requests and lifecycle transitions.
-- Test missing incidents, invalid payloads, database outage/error paths and simulation reset/isolation.
-- Review logs and errors for accidental secret disclosure.
+### Incident investigation
 
-## Phase 8 — deployment checklist
+The deterministic rule engine provides a fallback baseline for severity, evidence, and recommendations. Optional model output must remain advisory; it must not override verified telemetry, incident severity, or mandatory human approval. Do not describe the dashboard's investigation backend as powered by Evolus unless the actual backend request has been configured and successfully verified end to end.
 
-- Set MongoDB and optional model endpoint values in the deployment platform's server-side environment settings.
-- Keep this deployment in demo-only mode; do not treat the demo entry page as a security boundary.
-- Confirm MongoDB network access and durable writes from the deployed runtime.
-- Deploy, then smoke-test sign-in, dashboard, simulation, investigation, saved incident restore, decisions and lifecycle transitions.
-- Confirm the simulation's in-memory limitations are acceptable for the demo and rehearse a fallback if model inference is unavailable.
+### AMD GPU inference
 
-## Integration status
+This repository targets an industrial AI demonstration, but **AMD GPU-backed inference must not be claimed as active unless an actual model endpoint is hosted on AMD infrastructure and a real FactoryGuard request has been verified end to end**. A provider key, model catalogue entry, or separate chat response is not proof of AMD GPU execution. Record reproducible runtime evidence before claiming this capability.
 
-### Evolus agent chat adapter — initial implementation, not yet end-to-end verified
+## Safety, limitations, and next steps
 
-The optional server-side chat adapter is being added on `feat/evolus-agent-chat`. It uses the documented OpenAI-compatible endpoint `https://api.evolus.ai/v1/chat/completions`, a server-only Bearer API key and the Evolus model reference `<applicationId>:<agentId>`.
+- **Simulated telemetry only:** no live CNC, PLC, or factory sensor integration.
+- **Prototype, not industrial control:** never connect this demo to machinery or use it as the sole basis for maintenance decisions.
+- **Human approval:** critical interventions require qualified human review and approved site procedures.
+- **Demo access:** demo operator entry is not production-grade authentication or authorization.
+- **Persistence:** incident records require MongoDB configuration; in-memory fallbacks and simulation state are not durable or distributed.
+- **AI uncertainty:** model recommendations can be incomplete or wrong. Preserve evidence, uncertainty, and operator oversight.
+- **External services:** availability and behavior depend on their own configuration, credentials, and network access.
+- **Deployment:** verify the latest hosted build and repeat the demo smoke test before presenting.
 
-Configure these server-side variables only after creating an API key and agent in the actual Evolus event workspace:
+### Practical next steps
 
-- `EVOLUS_API_KEY`: application API key from the Evolus workspace.
-- `EVOLUS_MODEL`: the exact `applicationId:agentId` value for the agent.
+1. Run tests, lint, and a production build on the final commit.
+2. Smoke-test the deployed dashboard, simulation, incident investigation, persistence, and approval flow.
+3. Verify the Italian Evolus chat and capture a clean demo screenshot.
+4. If pursuing AMD inference, configure an AMD-hosted endpoint and document a reproducible end-to-end request.
+5. Keep all claims aligned with what is actually running and verified.
 
-This adapter is an integration slice, not proof of an end-to-end Evolus workflow. Workspace credentials, connected model, agent setup, and live requests have not been verified here. It does not by itself satisfy the partner award's requirement to use at least two Evolus building blocks. Before describing the solution as AMD-powered, configure and verify the agent's model endpoint on AMD infrastructure and preserve real runtime evidence. The deterministic investigation engine still owns severity, evidence and the human-approval gate; invalid setup, malformed answers and provider errors fall back to that engine.
+---
 
-### AMD GPU-backed inference — not yet verified in FactoryGuard
-
-Confirm actual GPU/runtime access and supported ROCm/software versions, serve a compatible open model with vLLM on AMD infrastructure, point the server-side configuration at that endpoint, and capture repeatable evidence from the real FactoryGuard investigation request. AMD credit submission, an endpoint URL, or a generic model response alone do not prove AMD execution. The public deployed demo must not be described as AMD-inference-enabled until the live request is successfully tested end to end.
-
-## Current limitations
-
-- Telemetry is simulated; no live CNC/PLC or production equipment is connected.
-- Risk/health/production estimates are demo heuristics and require plant-specific validation before any real operational use.
-- Simulation state is in memory and is not distributed or durable.
-- Live AMD GPU inference and Evolus AI integration remain planned work.
+Built as a demonstration of evidence-led industrial incident response, with operator oversight at the center.
